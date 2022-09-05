@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'pepper.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dbmaster',
+        'NAME': 'masterdb',
         'USER': 'ashish',
         'PASSWORD': 'pass123',
         'HOST': 'localhost',
