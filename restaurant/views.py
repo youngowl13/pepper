@@ -9,7 +9,7 @@ from rest_framework import status
 class RestaurantList(APIView):
 
     def get(self, request, format=None):
-        restaurants = Restaurant.objects.all()
+        restaurants = Restaurant.objects.all()[:10]
         serializer = RestaurantSerializer(restaurants, many=True)
         return Response(serializer.data)
 
