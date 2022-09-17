@@ -28,7 +28,7 @@ class Restaurant(models.Model):
     longitude = models.FloatField(null=True, blank=True, default=None)
     image_url = models.URLField(null=True, blank=True, max_length=250)
     do_online_delivery = models.BooleanField(default=False)
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='restaurants')
     cuisines = models.ManyToManyField(Cuisine, related_name='restaurants')
 
     def save(self, *args, **kwargs):
