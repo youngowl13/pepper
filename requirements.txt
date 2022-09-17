@@ -2,3 +2,4 @@ Django==4.1
 Pandas==1.4.4
 psycopg2==2.9.3
 ipython==8.4.0
+djangorestframework-simplejwt==5.2.0
