@@ -5,13 +5,23 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from rest_framework.pagination import PageNumberPagination
 
-class RestaurantList(APIView):
+
+class RestaurantList(APIView, PageNumberPagination):
+    page_size = 20
 
     def get(self, request, format=None):
-        restaurants = Restaurant.objects.all()[:10]
-        serializer = RestaurantSerializer(restaurants, many=True)
-        return Response(serializer.data)
+        city = request.GET.get('city')
+        name = request.GET.get('search')
+        query_set = Restaurant.objects.all()
+        if name:
+            query_set = query_set.filter(name__icontains=name)
+        if city:
+            query_set = query_set.filter(city__ext_id=city)
+        query_set = self.paginate_queryset(query_set, request, view=self)
+        serializer = RestaurantSerializer(query_set, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
         serializer = RestaurantSerializer(data=request.data)
