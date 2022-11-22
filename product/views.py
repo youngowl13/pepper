@@ -48,6 +48,18 @@ def list_view(request):
     return Response({'products': json_docs, 'count': product_count}, content_type='application/json')
 
 
+@api_view(('GET',))
+def detail_view(request, id):
+    db, mongo_client = get_db_handle('inddata')
+    products = get_collection_handle(db, 'products')
+    prod = products.find_one({'id': id})
+    prod_doc = {"id": prod["id"] if "id" in prod else "",
+                "product_name": prod["product_name"] if "product_name" in prod else "",
+                "price": prod["price"] if "price" in prod else "",
+                }
+    return Response({'product': prod_doc}, content_type='application/json')
+
+
 @ api_view(('POST',))
 def get_images(request):
     image_url = []
