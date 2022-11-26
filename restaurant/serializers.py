@@ -15,3 +15,9 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = ['ext_id', 'name', 'zomato_id', 'address', 'latitude', 'longitude', 'city', 'image_url', 'do_online_delivery', 'cuisines']
+
+
+class RestaurantSelectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Restaurant
+        fields = ['ext_id', 'name']
