@@ -27,7 +27,7 @@ def list_view(request):
     product_list = products.aggregate([{'$match': search_query}, {'$skip': 9*(page_number-1)}, {'$limit': 9}])
     json_docs = [{"id": doc["id"] if "id" in doc else "",
                   #   "allergens_tags": doc["allergens_tags"] if "allergens_tags" in doc else "",
-                 #   "ingredients_analysis": doc["ingredients_analysis"] if "ingredients_analysis" in doc else "",
+                  #   "ingredients_analysis": doc["ingredients_analysis"] if "ingredients_analysis" in doc else "",
                   #   "ingredients_text_with_allergens_en": doc["ingredients_text_with_allergens_en"] if "ingredients_text_with_allergens_en" in doc else "",
                   "product_name": doc["product_name"] if "product_name" in doc else "",
                   #   "ingredients": doc["ingredients"] if "ingredients" in doc else "",
