@@ -5,7 +5,7 @@ from restaurant.models import Restaurant, Cuisine
 class CuisineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cuisine
-        fields = ['name']
+        fields = ['name', 'ext_id']
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
