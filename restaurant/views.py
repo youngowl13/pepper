@@ -1,5 +1,5 @@
-from restaurant.models import Restaurant
-from restaurant.serializers import RestaurantSerializer, RestaurantSelectSerializer
+from restaurant.models import Restaurant, Cuisine
+from restaurant.serializers import RestaurantSerializer, RestaurantSelectSerializer, CuisineSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -14,7 +14,7 @@ class RestaurantList(APIView, PageNumberPagination):
     def get(self, request, format=None):
         city = request.GET.get('city')
         name = request.GET.get('search')
-        query_set = Restaurant.objects.all()
+        query_set = Restaurant.objects.all().order_by('ext_id')
         if name:
             query_set = query_set.filter(name__icontains=name)
         if city:
@@ -44,8 +44,8 @@ class RestaurantDetail(APIView):
         serializer = RestaurantSerializer(restaurant)
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        restaurant = self.get_object(pk)
+    def put(self, request, ext_id, format=None):
+        restaurant = self.get_object(ext_id)
         serializer = RestaurantSerializer(restaurant, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -62,4 +62,12 @@ class RestaurantSelectList(APIView):
     def get(self, request, format=None):
         restaurant = Restaurant.objects.all()
         serializer = RestaurantSelectSerializer(restaurant, many=True)
+        return Response(serializer.data)
+
+
+class CuisineList(APIView):
+
+    def get(self, request, format=None):
+        cuisine = Cuisine.objects.all()
+        serializer = CuisineSerializer(cuisine, many=True)
         return Response(serializer.data)

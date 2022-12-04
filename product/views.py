@@ -65,7 +65,10 @@ def get_images(request):
     image_url = []
     for id in request.data['ids']:
         response = openfoodfacts.products.get_product(id)
-        image_url.append({'id': id, 'image': response["product"]["image_front_url"]})
+        if ("image_front_url" in response["product"]):
+            image_url.append({'id': id, 'image': response["product"]["image_front_url"]})
+        else:
+            image_url.append({'id': id, 'image': ""})
     return Response({'response': image_url}, content_type='application/json')
 
 
