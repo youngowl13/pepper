@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-15co#yq%u#n^i+n&+r-5+0mm=8jn^qvr#l-3&pau!zmdfs!#cv'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['18.183.78.185']
+ALLOWED_HOSTS = ['18.183.78.185', ]
 
 
 # Application definition
@@ -183,6 +183,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200',
-    'http://localhost',
 ]
