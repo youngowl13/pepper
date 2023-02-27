@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import list_view, get_images, get_brands, get_categories
+from .views import list_view, get_images, get_brands, get_categories, detail_view
 
 urlpatterns = [
 
@@ -8,5 +8,6 @@ urlpatterns = [
     path('categories/', get_categories),
 
     path('', list_view),
+    path('<str:id>/', detail_view),
 
 ]
