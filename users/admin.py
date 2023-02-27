@@ -6,4 +6,3 @@ from users.models import User, Role
 @admin.register(Role)
 class UserAdmin(admin.ModelAdmin):
     pass
-# Register your models here.

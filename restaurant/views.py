@@ -1,5 +1,5 @@
 from restaurant.models import Restaurant, Cuisine
-from restaurant.serializers import RestaurantSerializer, RestaurantSelectSerializer, CuisineSerializer
+from restaurant.serializers import RestaurantSerializer, RestaurantNameListSerializer, CuisineSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -58,10 +58,10 @@ class RestaurantDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RestaurantSelectList(APIView):
+class RestaurantNameList(APIView):
     def get(self, request, format=None):
         restaurant = Restaurant.objects.all()
-        serializer = RestaurantSelectSerializer(restaurant, many=True)
+        serializer = RestaurantNameListSerializer(restaurant, many=True)
         return Response(serializer.data)
 
 

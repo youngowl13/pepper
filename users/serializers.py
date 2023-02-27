@@ -1,7 +1,7 @@
-from dataclasses import fields
 from rest_framework import serializers
-from users.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from users.models import User
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -12,7 +12,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token['ext_id'] = user.ext_id
         token['role'] = user.roles.first().get_id_display()
-        # del token['user_id']
         return token
 
 

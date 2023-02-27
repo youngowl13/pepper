@@ -37,7 +37,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
         read_only_fields = ('ext_id', )
 
 
-class RestaurantSelectSerializer(serializers.ModelSerializer):
+class RestaurantNameListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = ['ext_id', 'name']
