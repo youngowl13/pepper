@@ -9,7 +9,7 @@ class OrderSerializer(serializers.ModelSerializer):
     restaurant_address = serializers.SerializerMethodField()
 
     def create(self, validated_data):
-        validated_data['total_price'] = sum(d['price']*d['quantity'] for d in validated_data['product'])
+        validated_data['total_price'] = sum(int(d['price'])*int(d['quantity']) for d in validated_data['product'])
         return Order.objects.create(**validated_data)
 
     def get_restaurant_name(self, obj):
