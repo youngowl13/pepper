@@ -179,3 +179,4 @@ AUTH_USER_MODEL = "users.User"
 
 CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST").split(" ")
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS").split(" ")
+MONGO_HOST = os.environ.get("MONGO_HOST", "localhost")
