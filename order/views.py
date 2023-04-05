@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 
 import datetime
+from django.http import Http404
 from order.models import Order
 from order.serializers import OrderSerializer, OrderDetailSerializer
 

@@ -1,0 +1,41 @@
+FROM python:3.9.6-alpine as builder
+
+WORKDIR /usr/src/pepper
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apk update && apk add --no-cache g++ python3-dev postgresql-dev musl-dev snappy-dev krb5-dev
+
+RUN pip install --upgrade pip
+RUN pip install flake8==3.9.2
+COPY . .
+RUN flake8 --ignore=E501,F401 .
+
+COPY ./requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/pepper/wheels -r requirements.txt
+
+
+
+FROM python:3.9.6-alpine
+
+RUN mkdir -p /home/pepper
+RUN addgroup -S pepper && adduser -S pepper -G pepper
+
+ENV HOME=/home/pepper
+ENV APP_HOME=/home/pepper/web
+
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/staticfiles
+WORKDIR $APP_HOME
+
+RUN apk update && apk add libpq
+COPY --from=builder /usr/src/pepper/wheels /wheels
+COPY --from=builder /usr/src/pepper/requirements.txt .
+RUN pip install --no-cache /wheels/*
+
+COPY . $APP_HOME
+
+RUN chown -R pepper:pepper $APP_HOME
+
+USER pepper

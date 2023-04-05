@@ -1,4 +1,3 @@
-# FROM python:3.9.6-alpine
 FROM nickgryg/alpine-pandas
 
 WORKDIR /usr/src/pepper

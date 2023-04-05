@@ -7,3 +7,4 @@ django-cors-headers==3.13.0
 pymongo[snappy,gssapi,srv,tls]
 openfoodfacts==0.1.3
 django-redis==5.2.0
+gunicorn==20.1.0
