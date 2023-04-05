@@ -15,7 +15,7 @@ class OrderList(APIView, PageNumberPagination):
     def get(self, request, format=None):
         query_set = Order.objects.all()
         start_date = datetime.datetime.strptime(request.GET.get('startDate'), '%Y-%m-%d')
-        end_date = datetime.datetime.strptime(request.GET.get('endDate'),  '%Y-%m-%d') + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strptime(request.GET.get('endDate'), '%Y-%m-%d') + datetime.timedelta(days=1)
         if request.GET.get('restaurant'):
             query_set = query_set.filter(restaurant__ext_id=request.GET.get('restaurant'))
         query_set = query_set.filter(created__range=(start_date, end_date)).order_by('-created')
