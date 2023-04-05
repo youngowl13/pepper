@@ -3,7 +3,10 @@ from django.conf import settings
 
 
 def get_db_handle(db_name, port=27017):
-    client = MongoClient(host=settings.MONGO_HOST, port=int(port))
+    if settings.DEBUG:
+        client = MongoClient(host=settings.MONGO_HOST, port=int(port))
+    else:
+        client = MongoClient(host=settings.MONGO_HOST)
     db_handle = client[db_name]
     return db_handle
 

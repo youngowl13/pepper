@@ -92,13 +92,14 @@ DATABASES = {
     }
 }
 
+
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://{}:{}/1".format(REDIS_HOST, REDIS_PORT),
+        "LOCATION": "redis://{}:{}/0".format(REDIS_HOST, REDIS_PORT),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -183,7 +184,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles/")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

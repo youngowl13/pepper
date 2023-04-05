@@ -76,14 +76,10 @@ def get_images(request):
             response = openfoodfacts.products.get_product(id)
             if "image_front_url" in response["product"]:
                 cache.set(id, response["product"]["image_front_url"], 7 * 24 * 3600)
-                image_url.append(
-                    {"id": id, "image": response["product"]["image_front_url"]}
-                )
+                image_url.append({"id": id, "image": response["product"]["image_front_url"]})
             else:
-                cache.set(id, "https://www.freeiconspng.com/img/23485", 7 * 24 * 3600)
-                image_url.append(
-                    {"id": id, "image": "https://www.freeiconspng.com/img/23485"}
-                )
+                cache.set(id, "https://icon-library.com/images/no-image-icon/no-image-icon-0.jpg", 7 * 24 * 3600)
+                image_url.append({"id": id, "image": "https://icon-library.com/images/no-image-icon/no-image-icon-0.jpg"})
     return Response({"response": image_url}, content_type="application/json")
 
 
