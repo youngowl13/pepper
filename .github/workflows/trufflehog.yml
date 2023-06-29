@@ -1,12 +1,12 @@
-name: "Secret scanning"
+name: Secret Scanning
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
   pull_request:
-    branches: [ "master" ]
-  schedule:
-    - cron: '45 18 * * 4'
+    branches:
+      - master
 
 jobs:
   secret_scanning:
@@ -28,14 +28,17 @@ jobs:
       - name: Run TruffleHog scan
         run: trufflehog --regex --entropy=False .
 
-      - name: Save TruffleHog output to file
-        id: save_output
+      - name: Save TruffleHog findings
+        if: ${{ always() }}
         run: |
-          trufflehog --regex --entropy=False . > trufflehog_output.txt
-          echo "::set-output name=filename::trufflehog_output.txt"
+          mkdir -p findings
+          trufflehog --regex --entropy=False . > findings/trufflehog_report.txt
+        env:
+          ARTIFACTS_DIR: ${{ github.workspace }}/findings
 
-      - name: Upload TruffleHog output as artifact
+      - name: Upload findings as artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: trufflehog-output
-          path: trufflehog_output.txt
+          name: TruffleHog Findings
+          path: ${{ env.ARTIFACTS_DIR }}
