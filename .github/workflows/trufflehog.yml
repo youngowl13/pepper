@@ -26,13 +26,13 @@ jobs:
         run: pip install trufflehog
 
       - name: Run TruffleHog scan
-        run: trufflehog --regex --entropy=False .
+        run: trufflehog --regex --entropy=False ${{ github.workspace }}
 
       - name: Save TruffleHog findings
         if: ${{ always() }}
         run: |
-          mkdir -p findings
-          trufflehog --regex --entropy=False . > findings/trufflehog_report.txt
+          mkdir -p ${{ github.workspace }}/findings
+          trufflehog --regex --entropy=False ${{ github.workspace }} > ${{ github.workspace }}/findings/trufflehog_report.txt
         env:
           ARTIFACTS_DIR: ${{ github.workspace }}/findings
 
