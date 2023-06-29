@@ -3,10 +3,10 @@ name: Secret Scanning
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   secret_scanning:
@@ -22,17 +22,16 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install TruffleHog
-        run: pip install trufflehog
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@v3.41.1
+
 
       - name: Run TruffleHog scan
-        run: trufflehog --regex --entropy=False ${{ github.workspace }}
-
-      - name: Save TruffleHog findings
         if: ${{ always() }}
         run: |
-          mkdir -p ${{ github.workspace }}/findings
-          trufflehog --regex --entropy=False ${{ github.workspace }} > ${{ github.workspace }}/findings/trufflehog_report.txt
+          mkdir -p findings
+          sh -c 'trufflehog --regex --entropy=False . > findings/trufflehog_report.txt'
+        continue-on-error: true
         env:
           ARTIFACTS_DIR: ${{ github.workspace }}/findings
 
