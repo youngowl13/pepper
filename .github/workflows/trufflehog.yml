@@ -1,12 +1,12 @@
-name: Secret Scanning
+name: "CodeQL"
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "master" ]
+  schedule:
+    - cron: '45 18 * * 4'
 
 jobs:
   secret_scanning:
