@@ -28,4 +28,14 @@ jobs:
       - name: Run TruffleHog scan
         run: trufflehog --regex --entropy=False .
 
-      
+      - name: Save TruffleHog output to file
+        id: save_output
+        run: |
+          trufflehog --regex --entropy=False . > trufflehog_output.txt
+          echo "::set-output name=filename::trufflehog_output.txt"
+
+      - name: Upload TruffleHog output as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: trufflehog-output
+          path: trufflehog_output.txt
