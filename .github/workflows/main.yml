@@ -20,15 +20,22 @@ jobs:
         id: scan-secrets
         run: |
           docker pull gesellix/trufflehog
-          docker run -t gesellix/trufflehog --json > trufflehog-output.json 2>&1 || echo "::set-output name=exit-code::1"
+          docker run -t -d gesellix/trufflehog --json > trufflehog-output.json || echo "::set-output name=exit-code::1"
 
       - name: Capture Logs
         if: steps.scan-secrets.outputs.exit-code == '1'
         run: |
-          docker logs ${{ job.container_id }}
+          docker ps -a --format "{{.ID}} {{.Names}} {{.Status}}" --filter "name=trufflehog" | grep "Up" | awk '{print $1}' | xargs -I {} docker logs {} > trufflehog-logs.txt
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: TruffleHog Output
           path: trufflehog-output.json
+
+      - name: Upload Logs
+        if: steps.scan-secrets.outputs.exit-code == '1'
+        uses: actions/upload-artifact@v2
+        with:
+          name: TruffleHog Logs
+          path: trufflehog-logs.txt
