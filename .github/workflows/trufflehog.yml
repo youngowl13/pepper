@@ -24,7 +24,7 @@ jobs:
       - name: Run detect-secrets tool
         run: |
           detect-secrets --version
-          detect-secrets scan --all-files --force-use-all-plugins --exclude-files FETCH_HEAD > ${{ github.workspace }}/detect-secrets.json
+          detect-secrets scan --all-files --force-use-all-plugins  > ${{ github.workspace }}/detect-secrets.json
 
       - name: Publish results in the Pipeline Artifact
         uses: actions/upload-artifact@v2
