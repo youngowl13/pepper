@@ -17,13 +17,18 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Check-Git-Secrets
+        id: scan-secrets
         run: |
           docker pull gesellix/trufflehog
-          docker run -t gesellix/trufflehog --json > trufflehog
-          mv trufflehog $GITHUB_WORKSPACE/trufflehog-output.json
+          docker run -t gesellix/trufflehog --json > trufflehog-output.json 2>&1 || echo "::set-output name=exit-code::1"
+
+      - name: Capture Logs
+        if: steps.scan-secrets.outputs.exit-code == '1'
+        run: |
+          docker logs ${{ job.container_id }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: TruffleHog Output
-          path: $GITHUB_WORKSPACE/trufflehog-output.json
+          path: trufflehog-output.json
