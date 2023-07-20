@@ -1,0 +1,29 @@
+name: Secret Scan
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check-Git-Secrets
+        run: |
+          docker pull gesellix/trufflehog
+          docker run -t gesellix/trufflehog --json > trufflehog
+          mv trufflehog $GITHUB_WORKSPACE/trufflehog-output.json
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: TruffleHog Output
+          path: $GITHUB_WORKSPACE/trufflehog-output.json
