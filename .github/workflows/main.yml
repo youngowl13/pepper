@@ -56,14 +56,16 @@ jobs:
                   table.append(row)
                      
           print(tabulate(table, headers=table_headers, tablefmt='grid'))
-         
+          secrets_found = len(table) > 0
+          if secrets_found:
+              sys.exit(1)
         shell: python
         
       - name: Save Detect Secrets Output
         run: |
           datetime=$(date +"%Y-%m-%d_%H-%M-%S")
           repo_name=$(basename $PWD)
-          repo_name=${repo_name//pepper//-} # Replace slashes with underscores in the repository name
+          repo_name=${repo_name//\//-} # Replace slashes with underscores in the repository name
           output_file="detect_secrets_output_${repo_name}_${datetime}.txt"
           mv detect_secrets_output.txt $output_file
         shell: bash
@@ -141,14 +143,17 @@ jobs:
           
           # Print the table
           print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-        
+          # Check if any high severity issues were found
+          if any(row[1] == 'High' for row in sorted_rows):
+              print('Please check your code for the Security risk found.')
+              sys.exit(1)
         shell: python
 
       - name: Save Bandit Report
         run: |
           datetime=$(date +"%Y-%m-%d_%H-%M-%S")
           repo_name=$(basename $PWD)
-          repo_name=${repo_name//pepper//-} # Replace slashes with underscores in the repository name
+          repo_name=${repo_name//\//-} # Replace slashes with underscores in the repository name
           output_file="bandit_report_${repo_name}_${datetime}.txt"
           mv bandit_report.txt $output_file
         shell: bash
