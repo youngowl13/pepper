@@ -158,31 +158,15 @@ jobs:
 
           # Naming convention for the txt file
           nameofuser = "cairo"  # Replace this with your username
-          nameofjob = "bandit"  # Replace this with the job name or any relevant identifier
-          date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-
+          nameofjob = "bandit"   # Replace this with the job name or any relevant identifier
+          # Get the current date and time
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
           filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-
           with open(file_path, "w") as file:
-              file.write(table)
-
+              file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
           print(f"Table saved to {file_path}")
         shell: python
-
-      - name: Save Bandit Report
-        run: |
-          datetime=$(date +"%Y-%m-%d_%H-%M-%S")
-          repo_name=$(basename $PWD)
-          repo_name=${repo_name//\//-} # Replace slashes with underscores in the repository name
-          output_file="bandit_report_${repo_name}_${datetime}.txt"
-          mv bandit_report.txt $output_file
-        shell: bash
-
-      - name: Upload Bandit Report Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: bandit_report
-          path: ${{ steps.parse_bandit.outputs.path }}
 
    
