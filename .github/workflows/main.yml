@@ -23,6 +23,11 @@ jobs:
           python -m pip install detect-secrets
           python3 -m pip install tabulate
           python -m pip install --upgrade pip
+          
+          
+      - name: Set MAGICK_HOME to prevent ImageMagick error
+        run: |
+          export MAGICK_HOME=""
 
       - name: Run Detect Secrets Scan
         run: |
