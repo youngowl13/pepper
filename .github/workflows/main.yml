@@ -127,11 +127,11 @@ jobs:
                   collecting_info = False
                   for line in file:
                       if 'Issue' in line:
-                          issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
+                          issue = textwrap.fill(line.split(': ')[1].strip(), width=30)
                       elif 'Severity' in line:
                           severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
                       elif 'CWE' in line:
-                          cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
+                          cwe = textwrap.fill(line.split(': ')[1].strip(), width=60)  # Capture everything after "CWE:"
                       elif 'Location' in line:
                           location = textwrap.fill(line.split(': ')[1].strip(), width=30)
                           collecting_info = True  # Start collecting info after 'Location'
@@ -166,7 +166,7 @@ jobs:
               print(f"Table saved to {file_path}")
               # Upload the file to Google Cloud Storage
               bucket_name = "cicdpipelinee"
-              destination_path = "Bandit result"  # The destination folder path in the bucket
+              destination_path = "cicdpipelinee/Bandit result"  # The destination folder path in the bucket
               # Retrieve the Service Account key from GitHub Secrets
               service_account_key_json = os.environ.get("GCS_SA_KEY")
               if not service_account_key_json:
