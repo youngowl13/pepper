@@ -78,7 +78,7 @@ jobs:
           print(f"Table saved to file: {file_name}")
 
       - name: Upload Detect Secrets Output to GCS
-        uses: google-github-actions/upload-cloud-storage@v2
+        uses: google-github-actions/upload-cloud-storage@main
         with:
           args: upload detect_secret*.txt cicdpipelinee/Detect_secret/
         env:
@@ -176,7 +176,7 @@ jobs:
           print(f"Table saved to file: {file_name}")
 
       - name: Upload Bandit Report to GCS
-        uses: google-github-actions/upload-cloud-storage@v2
+        uses: google-github-actions/upload-cloud-storage@main
         with:
           args: upload Bandit_result*.txt cicdpipelinee/Bandit_result/
         env:
