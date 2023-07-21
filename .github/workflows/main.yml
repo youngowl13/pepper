@@ -84,11 +84,12 @@ jobs:
         
                       
   # Bandit for Source Code Review
-  Bandit:
+  bandit:
     name: Bandit Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -100,16 +101,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install bandit
           pip install tabulate
+
       - name: Security check - Bandit
         run: |
           bandit -r . > bandit_report.txt || true
-      - name: Parse Bandit report
+
+      - name: Parse Bandit report and save as txt
         run: |
           import re
           import textwrap
           import json
           import sys
-          import datetime  # Import the datetime module
+          import datetime
+          import os
           from tabulate import tabulate
 
           # Specify the file path
@@ -165,5 +169,20 @@ jobs:
 
           print(f"Table saved to {file_path}")
         shell: python
+
+      - name: Save Bandit Report
+        run: |
+          datetime=$(date +"%Y-%m-%d_%H-%M-%S")
+          repo_name=$(basename $PWD)
+          repo_name=${repo_name//\//-} # Replace slashes with underscores in the repository name
+          output_file="bandit_report_${repo_name}_${datetime}.txt"
+          mv bandit_report.txt $output_file
+        shell: bash
+
+      - name: Upload Bandit Report Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: bandit_report
+          path: ${{ steps.parse_bandit.outputs.path }}
 
    
