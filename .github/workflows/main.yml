@@ -74,7 +74,10 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: detect_secrets_output
-          path: ${{ steps.parse_output.outputs.path }}
+          path: ${{ env.DETECT_SECRETS_OUTPUT_FILE }}
+          if-no-files-found: warn
+        env:
+          DETECT_SECRETS_OUTPUT_FILE: ${{ steps.parse_output.outputs.path }}
                       
 # Bandit for Source Code Review
   Bandit:
@@ -162,4 +165,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: bandit_report
-          path: ${{ steps.parse_bandit.outputs.path }}
+          path: ${{ env.BANDIT_REPORT_FILE }}
+          if-no-files-found: warn
+        env:
+          BANDIT_REPORT_FILE: ${{ steps.parse_bandit.outputs.path }}
