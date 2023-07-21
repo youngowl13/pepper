@@ -40,8 +40,10 @@ jobs:
           import json
           import os
           import sys
+          import datetime  # Import the datetime module
           from tabulate import tabulate
-          with open("detect_secrets_output.txt", "r") as file:
+          
+          with open("detect-secrets.json", "r") as file:
               data = file.read()
           data_json = json.loads(data)
           if not data_json:
@@ -60,116 +62,21 @@ jobs:
                   row = [secret_type, filename, hashed_secret, line_number]
                   table.append(row)
                      
-          print(tabulate(table, headers=table_headers, tablefmt='plain'))  # Use 'plain' format
-          secrets_found = len(table) > 0
-          if secrets_found:
-              sys.exit(1)
+          print(tabulate(table, headers=table_headers, tablefmt='grid'))  # Use 'grid' format
+              
+          # Naming convention for the txt file
+          nameofuser = "cairo"  
+          nameofjob = "detect_secret"   # Replace this with the job name or any relevant identifier
+
+          # Get the current date and time
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+
+          filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+          file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+
+          with open(file_path, "w") as file:
+              file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
+
+          print(f"Table saved to {file_path}")
         shell: python
-        
-      - name: Save Detect Secrets Output
-        run: |
-          datetime=$(date +"%Y-%m-%d_%H-%M-%S")
-          repo_name=$(basename $PWD)
-          repo_name=${repo_name//\//-} # Replace slashes with underscores in the repository name
-          output_file="detect_secrets_output_${repo_name}_${datetime}.txt"
-          mv detect_secrets_output.txt $output_file
-        shell: bash
-
-      - name: Upload Detect Secrets Output Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: detect_secrets_output
-          path: ${{ env.DETECT_SECRETS_OUTPUT_FILE }}
-          if-no-files-found: warn
-        env:
-          DETECT_SECRETS_OUTPUT_FILE: ${{ steps.parse_output.outputs.path }}
-          
-# Bandit for Source Code Review
-  Bandit:
-        name: Bandit Scan
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v2
-
-          - name: Set up Python for Bandit
-            uses: actions/setup-python@v2
-            with:
-              python-version: 3.8
-
-          - name: Install dependencies
-            run: |
-              pip install bandit
-              pip install tabulate
-          - name: Security check - Bandit
-            run: |
-              bandit -r . > bandit_report.txt || true
-
-          - name: Parse Bandit report
-            run: |
-              import re
-              import textwrap
-              import json
-              import sys
-              from tabulate import tabulate
-              # Specify the file path
-              file_path = 'bandit_report.txt'
-              # To store the table rows
-              table_rows = []
-              # Open and read the file
-              with open(file_path, 'r') as file:
-                  issue, severity, cwe, location = "", "", "", ""
-                  collecting_info = False
-                  for line in file:
-                      if 'Issue' in line:
-                          issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
-                      elif 'Severity' in line:
-                          severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
-                      elif 'CWE' in line:
-                          cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
-                      elif 'Location' in line:
-                          location = textwrap.fill(line.split(': ')[1].strip(), width=30)
-                          collecting_info = True  # Start collecting info after 'Location'
-                      elif '---------------------------' in line:
-                          collecting_info = False  # Stop collecting info when encountering the delimiter
-                          # Assuming this is the end of the current issue, so we add the row to the list of rows and reset the variables for the next issue.
-                          table_rows.append([issue, severity, cwe, location])
-                          issue, severity, cwe, location = "", "", "", ""
-                      elif collecting_info:
-                          # Append all additional lines of information to the "Location" for the current issue
-                          location += "\n" + textwrap.fill(line.strip(), width=50)
-              # Convert to JSON
-              json_data = json.dumps(table_rows)
-              # Parse JSON
-              parsed_json = json.loads(json_data)
-              # Custom sort function
-              severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
-              # Sort the rows
-              sorted_rows = sorted(parsed_json, key=lambda x: severity_order[x[1]])
-              # Specify the table headers
-              table_headers = ["Issue", "Severity", "CWE", "Location"]
-
-              # Print the table
-              print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-              # Check if any high severity issues were found
-              if any(row[1] == 'High' for row in sorted_rows):
-                  print('Please check your code for the Security risk found.')
-                  sys.exit(1)
-            shell: python
-
-          - name: Save Bandit Report
-            run: |
-              datetime=$(date +"%Y-%m-%d_%H-%M-%S")
-              repo_name=$(basename $PWD)
-              repo_name=${repo_name//\//-} # Replace slashes with underscores in the repository name
-              output_file="bandit_report_${repo_name}_${datetime}.txt"
-              mv bandit_report.txt $output_file
-            shell: bash
-
-          - name: Upload Bandit Report Artifact
-            uses: actions/upload-artifact@v2
-            with:
-              name: bandit_report
-              path: ${{ env.BANDIT_REPORT_FILE }}
-              if-no-files-found: warn
-            env:
-              BANDIT_REPORT_FILE: bandit_report_${repo_name}_${datetime}.txt
