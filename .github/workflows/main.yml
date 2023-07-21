@@ -164,6 +164,6 @@ jobs:
               file.write(table)
 
           print(f"Table saved to {file_path}")
-        shell: python 
+        shell: python
 
    
