@@ -155,7 +155,7 @@ jobs:
           # Naming convention for the txt file
           nameofuser = "cairo"  # Replace this with your username
           nameofjob = "bandit"  # Replace this with the job name or any relevant identifier
-          date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")  # Get the current date and time in the specified format
+          date_and_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 
           filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
