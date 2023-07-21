@@ -24,6 +24,7 @@ jobs:
           python -m pip install detect-secrets
           python3 -m pip install tabulate
           python -m pip install --upgrade pip
+
       - name: Run Detect Secrets Scan
         run: detect-secrets scan --all-files --exclude-files '\.git/.*' --exclude-files '\.gitmodules' > detect-secrets.json
 
@@ -32,8 +33,7 @@ jobs:
           dsjson=$(cat detect-secrets.json)
           echo "${dsjson}"
           count=$(echo "${dsjson}" | jq -c -r '.results | length')
-         
-      
+
       - name: Parse Detect Secrets Output
         id: parse_output
         run: |
@@ -42,47 +42,41 @@ jobs:
           import sys
           import datetime  # Import the datetime module
           from tabulate import tabulate
-          
+
           with open("detect-secrets.json", "r") as file:
               data = file.read()
           data_json = json.loads(data)
           if not data_json:
               sys.exit(0)
-              
+
           table = []  # Initialize an empty table
           table_headers = ["Secret Type", "File", "Hashed Secret", "Line Number"]
           for file, secrets in data_json["results"].items():
               for secret in secrets:
                   if not isinstance(secret, dict):
-                    continue
+                      continue
                   secret_type = secret.get("type", "NA")
                   filename = secret.get("filename", "NA")
                   hashed_secret = secret.get("hashed_secret", "NA")
                   line_number = secret.get("line_number", "NA")
                   row = [secret_type, filename, hashed_secret, line_number]
                   table.append(row)
-                     
+
           print(tabulate(table, headers=table_headers, tablefmt='grid'))  # Use 'grid' format
-          
+
           # Naming convention for the txt file
           nameofuser = "cairo"  # Replace this with your username
           nameofjob = "detect_secret"   # Replace this with the job name or any relevant identifier
-
           # Get the current date and time
           now = datetime.datetime.now()
           date_and_time = now.strftime("%Y-%m-%d_%H-%M")
-
           filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-
           with open(file_path, "w") as file:
               file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
-
           print(f"Table saved to {file_path}")
         shell: python
 
-        
-                      
   # Bandit for Source Code Review
   bandit:
     name: Bandit Scan
@@ -117,99 +111,67 @@ jobs:
           from tabulate import tabulate
           from google.cloud import storage
 
-          def upload_file_to_gcs(service_account_key, bucket_name, source_file_path, destination_blob_name):
-              """Uploads a file to Google Cloud Storage.
-
-              Args:
-                  service_account_key (dict): The Service Account key as a dictionary.
-                  bucket_name (str): The name of the bucket where the file will be uploaded.
-                  source_file_path (str): The local path of the file you want to upload.
-                  destination_blob_name (str): The name to give the file in Google Cloud Storage.
-              """
-              try:
-                  # Initialize the client with the Service Account key
-                  client = storage.Client.from_service_account_info(service_account_key)
-
-                  # Get the bucket
-                  bucket = client.get_bucket(bucket_name)
-
-                  # Create a blob with the desired name
-                  blob = bucket.blob(destination_blob_name)
-
-                  # Upload the file to the cloud
-                  blob.upload_from_filename(source_file_path)
-
-                  print(f"File {source_file_path} uploaded to {destination_blob_name} in {bucket_name} bucket.")
-              except Exception as e:
-                  print(f"Error uploading file: {e}")
+          # ... (your `upload_file_to_gcs` function definition)
 
           def main():
-            file_path = 'bandit_report.txt'
-                            # To store the table rows
-            table_rows = []
-                # Open and read the file
-                with open(file_path, 'r') as file:
-                    issue, severity, cwe, location = "", "", "", ""
-                    collecting_info = False
-                    for line in file:
-                        if 'Issue' in line:
-                            issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
-                        elif 'Severity' in line:
-                            severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
-                        elif 'CWE' in line:
-                            cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
-                        elif 'Location' in line:
-                            location = textwrap.fill(line.split(': ')[1].strip(), width=30)
-                            collecting_info = True  # Start collecting info after 'Location'
-                        elif '---------------------------' in line:
-                            collecting_info = False  # Stop collecting info when encountering the delimiter
-                            # Assuming this is the end of the current issue, so we add the row to the list of rows and reset the variables for the next issue.
-                            table_rows.append([issue, severity, cwe, location])
-                            issue, severity, cwe, location = "", "", "", ""
-                        elif collecting_info:
-                            # Append all additional lines of information to the "Location" for the current issue
-                            location += "\n" + textwrap.fill(line.strip(), width=50)
-                # Custom sort function
-                severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
-                # Sort the rows
-                sorted_rows = sorted(table_rows, key=lambda x: severity_order[x[1]])
-                # Specify the table headers
-                table_headers = ["Issue", "Severity", "CWE", "Location"]
+              file_path = 'bandit_report.txt'
+              # To store the table rows
+              table_rows = []
+              # Open and read the file
+              with open(file_path, 'r') as file:
+                  issue, severity, cwe, location = "", "", "", ""
+                  collecting_info = False
+                  for line in file:
+                      if 'Issue' in line:
+                          issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
+                      elif 'Severity' in line:
+                          severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
+                      elif 'CWE' in line:
+                          cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
+                      elif 'Location' in line:
+                          location = textwrap.fill(line.split(': ')[1].strip(), width=30)
+                          collecting_info = True  # Start collecting info after 'Location'
+                      elif '---------------------------' in line:
+                          collecting_info = False  # Stop collecting info when encountering the delimiter
+                          # Assuming this is the end of the current issue, so we add the row to the list of rows and reset the variables for the next issue.
+                          table_rows.append([issue, severity, cwe, location])
+                          issue, severity, cwe, location = "", "", "", ""
+                      elif collecting_info:
+                          # Append all additional lines of information to the "Location" for the current issue
+                          location += "\n" + textwrap.fill(line.strip(), width=50)
+              # Custom sort function
+              severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
+              # Sort the rows
+              sorted_rows = sorted(table_rows, key=lambda x: severity_order[x[1]])
+              # Specify the table headers
+              table_headers = ["Issue", "Severity", "CWE", "Location"]
+              # Print the table
+              table = tabulate(sorted_rows, headers=table_headers, tablefmt='grid')
+              print(table)
+              # Naming convention for the txt file
+              nameofuser = "cairo"  # Replace this with your username
+              nameofjob = "bandit"   # Replace this with the job name or any relevant identifier
+              # Get the current date and time
+              now = datetime.datetime.now()
+              date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+              filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+              file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+              # Write the table to the file
+              with open(file_path, "w") as file:
+                  file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
+              print(f"Table saved to {file_path}")
+              # Upload the file to Google Cloud Storage
+              bucket_name = "cicdpipelinee"
+              destination_path = "Bandit result"  # The destination folder path in the bucket
+              # Retrieve the Service Account key from GitHub Secrets
+              service_account_key_json = os.environ.get("GCS_SA_KEY")
+              if not service_account_key_json:
+                  raise ValueError("GCS_SA_KEY environment variable not found.")
+              service_account_key = json.loads(service_account_key_json)
+              # Upload the file to Google Cloud Storage
+              destination_blob_name = os.path.join(destination_path, filename)
+              upload_file_to_gcs(service_account_key, bucket_name, file_path, destination_blob_name)
 
-                # Print the table
-                table = tabulate(sorted_rows, headers=table_headers, tablefmt='grid')
-                print(table)
-
-                # Naming convention for the txt file
-                nameofuser = "cairo"  # Replace this with your username
-                nameofjob = "bandit"   # Replace this with the job name or any relevant identifier
-
-                # Get the current date and time
-                now = datetime.datetime.now()
-                date_and_time = now.strftime("%Y-%m-%d_%H-%M")
-                filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
-                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-
-            # Write the table to the file
-                with open(file_path, "w") as file:
-                    file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-                print(f"Table saved to {file_path}")
-
-            # Upload the file to Google Cloud Storage
-                bucket_name = "cicdpipelinee"
-                destination_path = "Bandit result"  # The destination folder path in the bucket
-
-            # Retrieve the Service Account key from GitHub Secrets
-                service_account_key_json = os.environ.get("GCS_SA_KEY")
-                if not service_account_key_json:
-                    raise ValueError("GCS_SA_KEY environment variable not found.")
-                service_account_key = json.loads(service_account_key_json)
-
-            # Upload the file to Google Cloud Storage
-                destination_blob_name = os.path.join(destination_path, filename)
-                upload_file_to_gcs(service_account_key, bucket_name, file_path, destination_blob_name)
-
-            if __name__ == "__main__":
+          if __name__ == "__main__":
+              main()
         shell: python
-
-   
