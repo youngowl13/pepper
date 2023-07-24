@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  GCS_SA_KEY: ${{ secrets.GCS_SA_KEY }} 
+  GCS_SA_KEY: ${{ secrets.GCS_SA_KEY["project_id"]  }} 
 
 jobs:
   secret_scan:
