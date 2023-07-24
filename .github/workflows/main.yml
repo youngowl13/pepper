@@ -64,17 +64,15 @@ jobs:
         shell: python
         
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials: ${{ secrets.GCS_SA_KEY }}
+        run: echo "${{ secrets.GCS_SA_KEY }}" > key.json
 
       - name: Upload Result to GCP Bucket
         run: |
           gsutil cp detect_secrets_output.txt gs://cicdpipelinee/${{ env.FILE_NAME }}
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCS_SA_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: key.json
           FILE_NAME: ${{ steps.parse_output.outputs.file_name }}
-
+        
 # Bandit for Source Code Review
   Bandit:
     name: Bandit Scan
