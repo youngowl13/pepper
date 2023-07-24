@@ -87,6 +87,9 @@ jobs:
           pip install tabulate
           pip install google-cloud-storage
           
+      - name: Set GCS_SA_KEY environment variable
+        run: echo "$GCS_SA_KEY" >> $GITHUB_ENV
+          
       - name: Security check - Bandit
         run: |
           bandit -r . > bandit_report.txt || true
