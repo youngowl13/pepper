@@ -81,7 +81,7 @@ jobs:
       - name: Upload Detect Secrets Output to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: ${{ needs.parse_output.outputs.table_file_path }}
+          path: ${{steps.file_path }}
           destination: 'cicdpipelinee/Detect secret'
         
  
