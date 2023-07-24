@@ -159,21 +159,17 @@ jobs:
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
           with open(file_path, "w") as file:
               file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-
-          print(f"Table saved to {file_path}")
+          print(f'::set-output name=file-path::{file_path}')
         shell: python
-
+        
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCS_SA_KEY }}'
 
-      - name: Set FILE_PATH environment variable
-        run: |
-          echo "FILE_PATH=${PWD}/bandit_report.txt" >> $GITHUB_ENV
       - name: Upload Detect Secrets Output to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: ${{ env.FILE_PATH }}
-          destination: 'cicdpipelinee/Bandit result'
+          path: ${{ steps.parse_output.outputs.file-path }}
+          destination: 'cicdpipelinee/Detect secret'
