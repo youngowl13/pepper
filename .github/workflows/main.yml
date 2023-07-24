@@ -115,7 +115,31 @@ jobs:
           from tabulate import tabulate
           from google.cloud import storage
 
-          # ... (your `upload_file_to_gcs` function definition)
+          def upload_file_to_gcs(service_account_key, bucket_name, source_file_path, destination_blob_name):
+           """Uploads a file to Google Cloud Storage.
+
+          Args:
+              service_account_key (dict): The Service Account key as a dictionary.
+              bucket_name (str): The name of the bucket where the file will be uploaded.
+              source_file_path (str): The local path of the file you want to upload.
+              destination_blob_name (str): The name to give the file in Google Cloud Storage.
+          """
+          try:
+              # Initialize the client with the Service Account key
+              client = storage.Client.from_service_account_info(service_account_key)
+
+              # Get the bucket
+              bucket = client.get_bucket(bucket_name)
+
+              # Create a blob with the desired name
+              blob = bucket.blob(destination_blob_name)
+
+              # Upload the file to the cloud
+              blob.upload_from_filename(source_file_path)
+
+              print(f"File {source_file_path} uploaded to {destination_blob_name} in {bucket_name} bucket.")
+          except Exception as e:
+              print(f"Error uploading file: {e}")
 
           def main():
               file_path = 'bandit_report.txt'
