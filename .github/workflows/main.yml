@@ -65,6 +65,13 @@ jobs:
 
           print(f"Table saved to {file_path}")
         shell: python
+        
+      - name: Fetch file from python
+        id: read-version
+        run: |
+            import json
+            data
+          
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -79,7 +86,7 @@ jobs:
       - name: Upload Detect Secrets Output to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: ${{ env.FILE_PATH }}
+          path: ${{ needs.parse_output.outputs.table_file_path }}
           destination: 'cicdpipelinee/Detect secret'
         
  
