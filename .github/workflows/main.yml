@@ -81,11 +81,7 @@ jobs:
         with:
           path: ${{ env.FILE_PATH }}
           destination: 'cicdpipelinee/Detect secret'
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: key.json
-        # Clean up the key.json file after us
-      - name: Clean up
-        run: rm key.json
+        
  
 # Bandit for Source Code Review
   Bandit:
