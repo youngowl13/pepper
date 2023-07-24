@@ -61,8 +61,7 @@ jobs:
           with open(file_path, "w") as file:
               file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
           print(f"Table saved to {file_path}")
-            # Store the file path as an output variable
-            echo "table_file_path=${file_path}" >> $GITHUB_ENV
+        
         shell: python
         
       - name: Authenticate to Google Cloud
@@ -74,7 +73,7 @@ jobs:
       - name: Upload Detect Secrets Output to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: ${{ env.table_file_path }}
+          path: ${{ steps.get_file_path }}
           destination: 'cicdpipelinee/Detect secret'
         
  
