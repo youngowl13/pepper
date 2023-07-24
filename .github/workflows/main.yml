@@ -103,6 +103,12 @@ jobs:
       - name: Security check - Bandit
         run: |
           bandit -r . > bandit_report.txt || true
+          
+      - name: Generate and Upload Bandit Report
+        env:
+          GCS_SA_KEY: ${{ secrets.GCS_SA_KEY }}
+        run: |
+          python generate_and_upload_report.py
 
       - name: Parse Bandit report and save as txt
         run: |
