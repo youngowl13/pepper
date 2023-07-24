@@ -75,8 +75,7 @@ jobs:
   Bandit:
     name: Bandit Scan
     runs-on: ubuntu-latest
-    env:
-      GCS_SA_KEY: ${{ secrets.GCS_SA_KEY }} 
+  
     steps:
       - uses: actions/checkout@v2
 
@@ -92,8 +91,7 @@ jobs:
           pip install tabulate
           pip install google-cloud-storage
           
-      - name: Set GCS_SA_KEY environment variable
-        run: echo "$GCS_SA_KEY" >> $GITHUB_ENV
+   
           
       - name: Security check - Bandit
         run: |
