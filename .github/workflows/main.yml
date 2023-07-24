@@ -66,12 +66,7 @@ jobs:
           print(f"Table saved to {file_path}")
         shell: python
         
-      - name: Fetch file from python
-        id: read-version
-        run: |
-            import json
-            data
-          
+           
 
       - name: Authenticate to Google Cloud
         id: auth
