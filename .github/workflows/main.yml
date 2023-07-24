@@ -23,9 +23,11 @@ jobs:
           python -m pip install detect-secrets
           python3 -m pip install tabulate
           python -m pip install --upgrade pip
+
       - name: Run Detect Secrets Scan
         run: |
           detect-secrets scan --only-verified --exclude-files '\.git/.*' --exclude-files '\.gitmodules' >> detect_secrets_output.txt
+
       - name: Parse Detect Secrets Output
         id: parse_output
         run: |
@@ -60,9 +62,10 @@ jobs:
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
           with open(file_path, "w") as file:
               file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
+
           print(f"Table saved to {file_path}")
         shell: python
-        
+
       - name: Authenticate to Google Cloud
         run: echo "${{ secrets.GCS_SA_KEY }}" > key.json
 
@@ -72,13 +75,14 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
           FILE_NAME: ${{ steps.parse_output.outputs.file_name }}
-        
+ 
 # Bandit for Source Code Review
   Bandit:
     name: Bandit Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -91,13 +95,14 @@ jobs:
           pip install bandit
           pip install tabulate
           pip install google-cloud-storage
-          
+
       - name: Set GCS_SA_KEY environment variable
         run: echo "$GCS_SA_KEY" >> $GITHUB_ENV
-          
+
       - name: Security check - Bandit
         run: |
           bandit -r . > bandit_report.txt || true
+
       - name: Parse Bandit report
         run: |
           import re
@@ -156,18 +161,17 @@ jobs:
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
           with open(file_path, "w") as file:
               file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
+
           print(f"Table saved to {file_path}")
-          
         shell: python
-        
+
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials: ${{ secrets.GCS_SA_KEY }}
+        run: echo "${{ secrets.GCS_SA_KEY }}" > key.json
 
       - name: Upload Result to GCP Bucket
         run: |
           gsutil cp bandit_report.txt gs://cicdpipelinee/${{ env.FILE_NAME }}
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCS_SA_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: key.json
           FILE_NAME: ${{ steps.parse_output.outputs.file_name }}
+ 
