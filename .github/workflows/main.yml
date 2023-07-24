@@ -28,12 +28,11 @@ jobs:
         run: |
           detect-secrets scan --only-verified --exclude-files '\.git/.*' --exclude-files '\.gitmodules' >> detect_secrets_output.txt
 
-
       - name: Parse Detect Secrets Output
         id: parse_output
         run: |
           import json
-          import os
+          import os  # Import the os module
           import sys
           import datetime  # Import the datetime module
           from tabulate import tabulate
@@ -69,7 +68,6 @@ jobs:
           print(f"Table saved to {file_path}")
         shell: python
 
-
 # Bandit for Source Code Review
   Bandit:
     name: Bandit Scan
@@ -96,6 +94,7 @@ jobs:
           import textwrap
           import json
           import sys
+          import os  # Import the os module
           import datetime  # Import the datetime module
           from tabulate import tabulate
           # Specify the file path
