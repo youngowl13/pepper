@@ -31,8 +31,8 @@ jobs:
         run: |
           detect-secrets scan --only-verified --exclude-files '\.git/.*' --exclude-files '\.gitmodules' >> detect_secrets_output.txt
       
-      - name: Print GCS_SA_KEY
-        run: echo $GCS_SA_KEY["project_id"]
+      - name: use the secret
+        run: echo ${{ secrets.GCS_SA_KEY}} 
         
       - name: Parse Detect Secrets Output
         id: parse_output
