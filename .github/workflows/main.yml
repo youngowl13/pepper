@@ -168,7 +168,7 @@ jobs:
               bucket_name = "cicdpipelinee"
               destination_path = "cicdpipelinee/Bandit result"  # The destination folder path in the bucket
               # Retrieve the Service Account key from GitHub Secrets
-              service_account_key_json = os.environ.get("GCS_SA_KEY")
+              service_account_key_json = os.environ.get("secret.GCS_SA_KEY")
               if not service_account_key_json:
                   raise ValueError("GCS_SA_KEY environment variable not found.")
               service_account_key = json.loads(service_account_key_json)
