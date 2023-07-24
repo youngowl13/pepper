@@ -170,7 +170,12 @@ jobs:
 
           # Upload the file to the Cloud Storage bucket
           def upload_file_to_bucket(bucket_name, source_file_path, destination_blob_name):
-              credentials = Credentials.from_service_account_info(json.loads(os.environ['GCS_SA_KEY']))
+              credentials_json = os.environ.get('GCS_SA_KEY')
+              if credentials_json is None:
+                  print("Error: GCS_SA_KEY environment variable is not set.")
+                  return
+
+              credentials = Credentials.from_service_account_info(json.loads(credentials_json))
               client = storage.Client(credentials=credentials, project=bucket_name)
               bucket = client.get_bucket(bucket_name)
               blob = bucket.blob(destination_blob_name)
@@ -180,6 +185,5 @@ jobs:
           upload_file_to_bucket(bucket_name, file_path, filename)
 
           print(f"Table uploaded to {bucket_name}/{filename}")
-
 
         shell: python
