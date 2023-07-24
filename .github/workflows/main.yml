@@ -166,7 +166,7 @@ jobs:
           print(f"Table saved to {file_path}")
 
           # Specify the bucket name where you want to upload the file
-          bucket_name = cicdpipelinee
+          bucket_name = "your_bucket_name"
 
           # Upload the file to the Cloud Storage bucket
           def upload_file_to_bucket(bucket_name, source_file_path, destination_blob_name):
@@ -180,7 +180,6 @@ jobs:
           upload_file_to_bucket(bucket_name, file_path, filename)
 
           print(f"Table uploaded to {bucket_name}/{filename}")
-          ders=table_headers, tablefmt='grid'))
-                    print(f"Table saved to {file_path}")
+
 
         shell: python
