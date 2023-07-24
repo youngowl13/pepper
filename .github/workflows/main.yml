@@ -165,11 +165,19 @@ jobs:
           print(f"Table saved to {file_path}")
         shell: python
 
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCS_SA_KEY }}'
+
       - name: Upload Bandit Report to GCP Bucket
         run: |
           gsutil cp bandit_report.txt gs://cicdpipelinee/${{ env.FILE_NAME }}
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: key.json
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GCS_APPLICATION_CREDENTIALS }}
           FILE_NAME: ${{ steps.parse_output.outputs.file_name }}
-  
+
+      - name: Clean up
+        run: rm key.json
   
