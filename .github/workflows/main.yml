@@ -51,19 +51,19 @@ jobs:
                   line_number = secret.get("line_number", "NA")
                   row = [secret_type, filename, hashed_secret, line_number]
                   table.append(row)
+          # Print the table and save it to a file
           print(tabulate(table, headers=table_headers, tablefmt='grid'))
-          # Naming convention for the txt file
           nameofuser = "cairo"  # Replace this with your username
           nameofjob = "detect_secret"   # Replace this with the job name or any relevant identifier
-          # Get the current date and time
           now = datetime.datetime.now()
           date_and_time = now.strftime("%Y-%m-%d_%H-%M")
           filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
           file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
           with open(file_path, "w") as file:
               file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
-
           print(f"Table saved to {file_path}")
+          # Store the file path as an output variable
+          echo "::set-output name=table_file_path::${file_path}"
         shell: python
         
            
