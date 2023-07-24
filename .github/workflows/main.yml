@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  GCS_SA_KEY: ${{ secrets.GCS_SA_KEY }} 
+
 jobs:
   secret_scan:
     name: Secret Scan
