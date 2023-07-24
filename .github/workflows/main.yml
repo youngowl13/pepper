@@ -102,6 +102,7 @@ jobs:
           bandit -r . > bandit_report.txt || true
 
       - name: Parse Bandit report
+        id: parse_output
         run: |
           import re
           import textwrap
@@ -172,4 +173,4 @@ jobs:
         uses: google-github-actions/upload-cloud-storage@v1
         with:
           path: ${{ steps.parse_output.outputs.file-path }}
-          destination: 'cicdpipelinee/Detect secret'
+          destination: 'cicdpipelinee/Bandit result'
