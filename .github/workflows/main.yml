@@ -4,9 +4,6 @@ on:
   push:
   workflow_dispatch:
 
-env:
-  GCS_SA_KEY: ${{ secrets.project_id}} 
-
 jobs:
   secret_scan:
     name: Secret Scan
@@ -26,14 +23,9 @@ jobs:
           python -m pip install detect-secrets
           python3 -m pip install tabulate
           python -m pip install --upgrade pip
-
       - name: Run Detect Secrets Scan
         run: |
           detect-secrets scan --only-verified --exclude-files '\.git/.*' --exclude-files '\.gitmodules' >> detect_secrets_output.txt
-      
-      - name: use the secret
-        run: echo GCS_SA_KEY
-        
       - name: Parse Detect Secrets Output
         id: parse_output
         run: |
@@ -42,11 +34,9 @@ jobs:
           import sys
           import datetime  # Import the datetime module
           from tabulate import tabulate
-
           with open("detect_secrets_output.txt", "r") as file:
               data = file.read()
           data_json = json.loads(data)
-
           table = []  # Initialize an empty table
           table_headers = ["Secret Type", "File", "Hashed Secret", "Line Number"]
           for file, secrets in data_json["results"].items():
@@ -59,7 +49,6 @@ jobs:
                   line_number = secret.get("line_number", "NA")
                   row = [secret_type, filename, hashed_secret, line_number]
                   table.append(row)
-
           print(tabulate(table, headers=table_headers, tablefmt='grid'))
           # Naming convention for the txt file
           nameofuser = "cairo"  # Replace this with your username
@@ -73,12 +62,23 @@ jobs:
               file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
           print(f"Table saved to {file_path}")
         shell: python
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials: ${{ secrets.GCS_SA_KEY }}
+
+      - name: Upload Result to GCP Bucket
+        run: |
+          gsutil cp detect_secrets_output.txt gs://cicdpipelinee/${{ env.FILE_NAME }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCS_SA_KEY }}
+          FILE_NAME: ${{ steps.parse_output.outputs.file_name }}
 
 # Bandit for Source Code Review
   Bandit:
     name: Bandit Scan
     runs-on: ubuntu-latest
-  
     steps:
       - uses: actions/checkout@v2
 
@@ -94,12 +94,82 @@ jobs:
           pip install tabulate
           pip install google-cloud-storage
           
-   
+      - name: Set GCS_SA_KEY environment variable
+        run: echo "$GCS_SA_KEY" >> $GITHUB_ENV
           
       - name: Security check - Bandit
         run: |
           bandit -r . > bandit_report.txt || true
-      - name: check envion
-        run: print(GCS_SA_KEY)
+      - name: Parse Bandit report
+        run: |
+          import re
+          import textwrap
+          import json
+          import sys
+          import os
+          import datetime
+          from tabulate import tabulate
+          # Specify the file path
+          file_path = 'bandit_report.txt'
+          # To store the table rows
+          table_rows = []
+          # Open and read the file
+          with open(file_path, 'r') as file:
+              issue, severity, cwe, location = "", "", "", ""
+              collecting_info = False
+              for line in file:
+                  if 'Issue' in line:
+                      issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
+                  elif 'Severity' in line:
+                      severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
+                  elif 'CWE' in line:
+                      cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
+                  elif 'Location' in line:
+                      location = textwrap.fill(line.split(': ')[1].strip(), width=30)
+                      collecting_info = True  # Start collecting info after 'Location'
+                  elif '---------------------------' in line:
+                      collecting_info = False  # Stop collecting info when encountering the delimiter
+                      # Assuming this is the end of the current issue, so we add the row to the list of rows and reset the variables for the next issue.
+                      table_rows.append([issue, severity, cwe, location])
+                      issue, severity, cwe, location = "", "", "", ""
+                  elif collecting_info:
+                      # Append all additional lines of information to the "Location" for the current issue
+                      location += "\n" + textwrap.fill(line.strip(), width=50)
+          # Convert to JSON
+          json_data = json.dumps(table_rows)
+          # Parse JSON
+          parsed_json = json.loads(json_data)
+          # Custom sort function
+          severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
+          # Sort the rows
+          sorted_rows = sorted(parsed_json, key=lambda x: severity_order[x[1]])
+          # Specify the table headers
+          table_headers = ["Issue", "Severity", "CWE", "Location"]
+          # Print the table
+          print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
+          # Naming convention for the txt file
+          nameofuser = "cairo"  # Replace this with your username
+          nameofjob = "bandit"  # Replace this with the job name or any relevant identifier
+          # Get the current date and time
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+          filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+          # Save the table to a local file
+          file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+          with open(file_path, "w") as file:
+              file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
+          print(f"Table saved to {file_path}")
+          
+        shell: python
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials: ${{ secrets.GCS_SA_KEY }}
 
-      
+      - name: Upload Result to GCP Bucket
+        run: |
+          gsutil cp bandit_report.txt gs://cicdpipelinee/${{ env.FILE_NAME }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCS_SA_KEY }}
+          FILE_NAME: ${{ steps.parse_output.outputs.file_name }}
