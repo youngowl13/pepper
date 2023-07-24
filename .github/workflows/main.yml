@@ -28,16 +28,14 @@ jobs:
         run: |
           detect-secrets scan --only-verified --exclude-files '\.git/.*' --exclude-files '\.gitmodules' >> detect_secrets_output.txt
 
-      - name: Create Python Script
-        id: create_python_script
+      - name: Parse Detect Secrets Output
+        id: parse_output
         run: |
-          echo '
           import json
-          import os
+          import os  # Import the os module
           import sys
-          import datetime
+          import datetime  # Import the datetime module
           from tabulate import tabulate
-
           with open("detect_secrets_output.txt", "r") as file:
               data = file.read()
           data_json = json.loads(data)
@@ -54,20 +52,19 @@ jobs:
                   row = [secret_type, filename, hashed_secret, line_number]
                   table.append(row)
           # Print the table and save it to a file
-          print(tabulate(table, headers=table_headers, tablefmt="grid"))
-          nameofuser = "cairo"  # Replace this with your username
-          nameofjob = "detect_secret"   # Replace this with the job name or any relevant identifier
-          now = datetime.datetime.now()
-          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
-          filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
-          file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-          with open(file_path, "w") as file:
-              file.write(tabulate(table, headers=table_headers, tablefmt="grid"))
-          print(f"Table saved to {file_path}")
-          # Store the file path as an output variable
-          print(f"::set-output name=table_file_path::{file_path}")
-          ' > script.py
-        shell: bash
+            print(tabulate(table, headers=table_headers, tablefmt='grid'))
+            nameofuser = "cairo"  # Replace this with your username
+            nameofjob = "detect_secret"   # Replace this with the job name or any relevant identifier
+            now = datetime.datetime.now()
+            date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+            filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+            with open(file_path, "w") as file:
+                file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
+            print(f"Table saved to {file_path}")
+            # Store the file path as an output variable
+            echo "table_file_path=${file_path}" >> $GITHUB_ENV
+          shell: python
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -78,9 +75,8 @@ jobs:
       - name: Upload Detect Secrets Output to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: ${{ steps.create_python_script.outputs.table_file_path }}
+          path: ${{ env.table_file_path }}
           destination: 'cicdpipelinee/Detect secret'
-
         
  
 # Bandit for Source Code Review
