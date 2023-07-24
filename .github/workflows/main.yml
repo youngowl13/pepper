@@ -72,6 +72,10 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCS_SA_KEY }}'
 
+      - name: Set FILE_PATH environment variable
+        run: |
+          echo "FILE_PATH=${PWD}/detect_secrets_output.txt" >> $GITHUB_ENV
+
       - name: Upload Detect Secrets Output to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
@@ -79,9 +83,7 @@ jobs:
           destination: 'cicdpipelinee/Detect secret'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
-          FILE_PATH: ${{ steps.parse_output.outputs.file_path }}
-        # Clean up the key.json file after use
-        
+        # Clean up the key.json file after us
       - name: Clean up
         run: rm key.json
  
