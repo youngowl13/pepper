@@ -35,6 +35,8 @@ jobs:
           import json
           import os
           import sys
+          import datetime
+
           from tabulate import tabulate
           with open("detect_secrets_output.txt", "r") as file:
               data = file.read()
