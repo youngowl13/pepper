@@ -2,7 +2,7 @@ name: Secrets Scanning
 
 on:
   push:
- 
+  
 
 jobs:
   trufflehog:
@@ -46,3 +46,17 @@ jobs:
       with:
         name: detect_secrets_results
         path: detect_secrets_results.json
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Run gitleaks
+      uses: zricethezav/gitleaks-action@v1.6.0
+    - name: Upload gitleaks results
+      uses: actions/upload-artifact@v2
+      with:
+        name: gitleaks_results
+        path: gitleaks-report.json
