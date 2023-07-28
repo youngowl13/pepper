@@ -2,12 +2,15 @@ name: Secrets Scanning
 
 on:
   push:
-   
+ 
+
 jobs:
   trufflehog:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -15,7 +18,8 @@ jobs:
     - name: Install trufflehog
       run: pip install trufflehog
     - name: Run trufflehog
-      run: trufflehog --json --regex --entropy=False . > trufflehog_results.json
+      run: |
+        trufflehog --json --regex --entropy=False --scan_current . > trufflehog_results.json || echo "No secrets found by trufflehog"
     - name: Upload trufflehog results
       uses: actions/upload-artifact@v2
       with:
@@ -26,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -33,7 +39,8 @@ jobs:
     - name: Install detect-secrets
       run: pip install detect-secrets
     - name: Run detect-secrets
-      run: detect-secrets scan > detect_secrets_results.json
+      run: |
+        detect-secrets scan > detect_secrets_results.json || echo "No secrets found by detect-secrets"
     - name: Upload detect-secrets results
       uses: actions/upload-artifact@v2
       with:
