@@ -1,0 +1,41 @@
+name: Secrets Scanning
+
+on:
+  push:
+   
+jobs:
+  trufflehog:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install trufflehog
+      run: pip install trufflehog
+    - name: Run trufflehog
+      run: trufflehog --json --regex --entropy=False . > trufflehog_results.json
+    - name: Upload trufflehog results
+      uses: actions/upload-artifact@v2
+      with:
+        name: trufflehog_results
+        path: trufflehog_results.json
+
+  detect-secrets:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install detect-secrets
+      run: pip install detect-secrets
+    - name: Run detect-secrets
+      run: detect-secrets scan > detect_secrets_results.json
+    - name: Upload detect-secrets results
+      uses: actions/upload-artifact@v2
+      with:
+        name: detect_secrets_results
+        path: detect_secrets_results.json
