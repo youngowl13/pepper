@@ -19,14 +19,78 @@ jobs:
         source env/bin/activate
         python -m pip install truffleHog
         python env/bin/trufflehog --json https://github.com/yashwarrhan/pepper.git > truffleHog.json || true
-
     - name: Run detect-secrets
       run: |
         python3 -m venv env-ds
         source env-ds/bin/activate
         pip install detect-secrets
         detect-secrets scan > detect-secrets.json
+    
+    - name: Parse JSON results
+      run: |
+        import json
+        import pandas as pd
+        from tabulate import tabulate
 
+        # Load the JSON files
+        with open('truffleHog.json', 'r') as f:
+            truffleHog_data = json.load(f)
+
+        with open('detect-secrets.json', 'r') as f:
+            detect_secrets_data = json.load(f)
+
+        # Parse the JSON data
+        # This is an example; replace with your own parsing logic
+        parsed_data = {
+            'header': ['Key', 'Value'],
+            'rows': [
+                [key, value]
+                for key, value in zip(truffleHog_data.keys(), truffleHog_data.values())
+            ],
+        }
+
+        # Format the parsed data as a table
+        table = tabulate(parsed_data['rows'], headers=parsed_data['header'], tablefmt='pipe')
+
+        # Save the table
+        with open('parsed.txt', 'w') as f:
+            f.write(table)
+      shell: python
+    
+    - name: Parse JSON results
+      run: |
+        import json
+        from tabulate import tabulate
+
+        # Load the detect-secrets output
+        with open('detect-secrets.json', 'r') as f:
+            data_json = json.load(f)
+
+        if not data_json:
+            sys.exit(1)
+
+        table = []  # Initialize an empty table
+
+        table_headers = ["Secret Type", "File", "Hashed Secret", "Line Number"]
+        for file, secrets in data_json["results"].items():
+            for secret in secrets:
+                if not isinstance(secret, dict):
+                    continue
+                secret_type = secret.get("type", "NA")
+                filename = secret.get("filename", "NA")
+                hashed_secret = secret.get("hashed_secret", "NA")
+                line_number = secret.get("line_number", "NA")
+                row = [secret_type, filename, hashed_secret, line_number]
+                table.append(row)
+        
+        table_str = tabulate(table, headers=table_headers, tablefmt='grid')
+
+        # Save the table to a text file
+        with open('parsed.txt', 'w') as f:
+            f.write(table_str)
+      shell: python
+
+  
     - name: Upload truffleHog results
       uses: actions/upload-artifact@v2
       with:
