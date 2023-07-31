@@ -18,7 +18,7 @@ jobs:
         python3 -m venv env
         source env/bin/activate
         python -m pip install truffleHog
-        python env/bin/trufflehog --json https://github.com/yashwarrhan/pepper.git > truffleHog.json || true
+        python env/bin/trufflehog  --regex --entropy=False  --json https://github.com/yashwarrhan/pepper.git > truffleHog.json || true
 
     - name: Run detect-secrets
       run: |
