@@ -64,6 +64,7 @@ jobs:
             file.write(tabulate(table_data, headers=table_headers, tablefmt='grid'))
 
         print(f"Output saved to: {output_file_path}")
+      shell: python
 
     - name: Parse detect-secrets JSON results
       run: |
@@ -106,6 +107,8 @@ jobs:
             file.write(tabulate(table_data, headers=table_headers, tablefmt='grid'))
 
         print(f"Output saved to: {output_file_path}")
+      shell: python
+
 
     - name: Upload truffleHog results
       uses: actions/upload-artifact@v2
