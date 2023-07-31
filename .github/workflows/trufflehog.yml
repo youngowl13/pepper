@@ -26,6 +26,10 @@ jobs:
         source env-ds/bin/activate
         pip install detect-secrets
         detect-secrets scan > detect-secrets.json
+      
+    - name: Install tabulate
+      run: |
+        python3 -m pip install tabulate
     
     - name: Parse trufflehog JSON results
       run: |
