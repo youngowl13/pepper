@@ -16,7 +16,7 @@ jobs:
     - name: Run git-secrets
       run: |
         git clone https://github.com/awslabs/git-secrets.git
-        cd git-secrets && make install
+        cd git-secrets && sudo make install
         cd .. && git secrets --scan > git-secrets.json
 
     - name: Run truffleHog
