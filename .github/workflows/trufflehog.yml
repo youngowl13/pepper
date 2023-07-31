@@ -34,40 +34,43 @@ jobs:
     - name: Parse trufflehog JSON results
       run: |
         import json
+        import os
         import datetime
         from tabulate import tabulate
 
-        def parse_trufflehog_output(data):
+        def parse_trufflehog_output(file_path):
             table = []  # Initialize an empty table
             table_headers = ["Branch", "Commit", "Commit Hash", "Date", "Reason"]
 
-            for entry in data:
-                try:
-                    row = [entry["branch"], entry["commit"], entry["commitHash"], entry["date"], entry["reason"]]
-                    table.append(row)
-                except KeyError as e:
-                    print(f"Failed to parse entry: {entry}")
+            with open(file_path, "r") as file:
+                for line in file:
+                    try:
+                        data = json.loads(line)
+                        row = [data["branch"], data["commit"], data["commitHash"], data["date"], data["reason"]]
+                        table.append(row)
+                    except json.JSONDecodeError as e:
+                        print(f"Failed to parse line as JSON: {line}")
 
             return table_headers, table
 
-        with open('truffleHog.json', 'r') as f:
-            truffleHog_data = json.load(f)
+        if __name__ == "__main__":
+            input_file_path = "truffleHog.json"  # Use the correct path to the truffleHog.json file here
+            table_headers, table_data = parse_trufflehog_output(input_file_path)
 
-        table_headers, table_data = parse_trufflehog_output(truffleHog_data)
+            print(tabulate(table_data, headers=table_headers, tablefmt='grid'))
 
-        print(tabulate(table_data, headers=table_headers, tablefmt='grid'))
+            # Save the parsed data into a text file
+            nameofuser = "yash"  # Replace this with your username
+            nameofjob = "trufflehog"   # Replace this with the job name or any relevant identifier
+            now = datetime.datetime.now()
+            date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+            output_file_path = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
 
-        # Save the parsed data into a text file
-        nameofuser = "yash"  # Replace this with your username
-        nameofjob = "trufflehog"   # Replace this with the job name or any relevant identifier
-        now = datetime.datetime.now()
-        date_and_time = now.strftime("%Y-%m-%d_%H-%M")
-        output_file_path = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+            with open(output_file_path, "w") as file:
+                file.write(tabulate(table_data, headers=table_headers, tablefmt='grid'))
 
-        with open(output_file_path, "w") as file:
-            file.write(tabulate(table_data, headers=table_headers, tablefmt='grid'))
+            print(f"Output saved to: {output_file_path}")
 
-        print(f"Output saved to: {output_file_path}")
       shell: python
 
     - name: Parse detect-secrets JSON results
