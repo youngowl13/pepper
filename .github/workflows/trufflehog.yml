@@ -1,70 +1,48 @@
-name: Security Check
+name: Secret Scanning
 
 on:
   push:
-  workflow_dispatch:
+    branches:
+      - master
 
-# Secret scan to detect scan in code using detect secret
 jobs:
-  secret_scan:
-    name: Secret Scan
+  scan:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
+    - name: Run git-secrets
+      run: |
+        git clone https://github.com/awslabs/git-secrets.git
+        cd git-secrets && make install
+        cd .. && git secrets --scan > git-secrets.json
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get install -y diffutils jq python3 python3-pip
-          python -m pip install detect-secrets
-          python3 -m pip install tabulate
-          python -m pip install --upgrade pip
+    - name: Run truffleHog
+      run: |
+        pip install truffleHog
+        truffleHog --json --output truffleHog.json https://github.com/username/reponame.git
 
-      - name: Run Detect Secrets Scan
-        run: detect-secrets scan --all-files --exclude-files '\.git/.*' --exclude-files '\.gitmodules' > detect-secrets.json
+    - name: Run secrets
+      run: |
+        pip install secrets
+        secrets ./ > secrets.json
 
-      - name: Verify Secrets
-        run: |
-          dsjson=$(cat detect-secrets.json)
-          echo "${dsjson}"
+    - name: Upload git-secrets results
+      uses: actions/upload-artifact@v2
+      with:
+        name: git-secrets-results
+        path: git-secrets.json
 
-          count=$(echo "${dsjson}" | jq -c -r '.results | length')
+    - name: Upload truffleHog results
+      uses: actions/upload-artifact@v2
+      with:
+        name: truffleHog-results
+        path: truffleHog.json
 
-         
-
-      - name: Parse Detect Secrets Output
-        id: parse_output
-        run: |
-          import json
-          import os
-          import sys
-          from tabulate import tabulate
-          with open("detect-secrets.json", "r") as file:
-              data = file.read()
-          data_json = json.loads(data)
-          if not data_json:
-              sys.exit(0)
-
-          table = []  # Initialize an empty table
-          table_headers = ["Secret Type", "File", "Hashed Secret", "Line Number"]
-          for file, secrets in data_json["results"].items():
-              for secret in secrets:
-                  if not isinstance(secret, dict):
-                    continue
-                  secret_type = secret.get("type", "NA")
-                  filename = secret.get("filename", "NA")
-                  hashed_secret = secret.get("hashed_secret", "NA")
-                  line_number = secret.get("line_number", "NA")
-                  row = [secret_type, filename, hashed_secret, line_number]
-                  table.append(row)
-
-          print(tabulate(table, headers=table_headers, tablefmt='grid'))
-          secrets_found = len(table) > 0
-          if secrets_found:
-              sys.exit(1)
-        shell: python
+    - name: Upload secrets results
+      uses: actions/upload-artifact@v2
+      with:
+        name: secrets-results
+        path: secrets.json
