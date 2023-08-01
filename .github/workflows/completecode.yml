@@ -121,6 +121,7 @@ jobs:
           import datetime
           import textwrap  # Import the textwrap module
           from tabulate import tabulate
+          import sys  # Import the sys module
 
           def parse_trufflehog_output(file_path):
               table = []  # Initialize an empty table
@@ -145,7 +146,7 @@ jobs:
               return wrapped_table
 
           if __name__ == "__main__":
-              input_file_path = "truffleHog.json"  # Use the correct path to the truffleHog.json file here
+              input_file_path = sys.argv[1]  # Get the filename from the command line arguments
               table_headers, table_data = parse_trufflehog_output(input_file_path)
 
               # Wrap the text in the table for better display
@@ -165,7 +166,8 @@ jobs:
               with open(output_file_path, "w") as file:
                   file.write(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
 
-              print(f'::set-output name=file-path::{output_file_path}')
+              print(f"::set-output name=file-path::{output_file_path}")
+
 
           shell: python
 
