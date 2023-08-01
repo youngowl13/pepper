@@ -93,9 +93,7 @@ jobs:
           fi
           
   Trufflehog:
-
     name: Trufflehog Scan
-    #needs: secret_scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -106,7 +104,7 @@ jobs:
           python3 -m venv env
           source env/bin/activate
           python -m pip install truffleHog
-          python env/bin/trufflehog  --regex --entropy=False  --json https://github.com/yashwarrhan/pepper.git > truffleHog.json || true
+          trufflehog --regex --entropy=False  --json https://github.com/yashwarrhan/pepper.git > truffleHog.json || true
       
       - name: Install tabulate
         run: |
@@ -114,19 +112,16 @@ jobs:
       
       - name: Parse trufflehog JSON results
         id: parse_trufflehog
-
-        run: |  
+        run: |
           import json
           import os
           import datetime
-          import textwrap  # Import the textwrap module
+          import textwrap
           from tabulate import tabulate
-          import sys  # Import the sys module
-
+          
           def parse_trufflehog_output(file_path):
-              table = []  # Initialize an empty table
+              table = []
               table_headers = ["Branch", "Commit", "Commit Hash", "Date", "Reason"]
-
               with open(file_path, "r") as file:
                   for line in file:
                       try:
@@ -135,41 +130,28 @@ jobs:
                           table.append(row)
                       except json.JSONDecodeError as e:
                           print(f"Failed to parse line as JSON: {line}")
-
               return table_headers, table
-
+          
           def wrap_text_in_table(table_data, table_headers, width=20):
-              wrapped_table = [table_headers]  # Add headers to the wrapped table
+              wrapped_table = [table_headers]
               for row in table_data:
                   wrapped_row = [textwrap.fill(str(item), width) if header != "Commit Hash" else str(item) for header, item in zip(table_headers, row)]
                   wrapped_table.append(wrapped_row)
               return wrapped_table
-
-          if __name__ == "__main__":
-              input_file_path = sys.argv[1]  # Get the filename from the command line arguments
-              table_headers, table_data = parse_trufflehog_output(input_file_path)
-
-              # Wrap the text in the table for better display
-              wrapped_table_data = wrap_text_in_table(table_data, table_headers)
-
-              # Print the wrapped table to the console
-              print(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
-
-              # Save the parsed data into a text file
-              nameofuser = "yash"  # Replace this with your username
-              nameofjob = "trufflehog"   # Replace this with the job name or any relevant identifier
-              now = datetime.datetime.now()
-              date_and_time = now.strftime("%Y-%m-%d_%H-%M")
-              output_file_path = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
-
-              # Write the wrapped table to the output file
-              with open(output_file_path, "w") as file:
-                  file.write(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
-
-              print(f"::set-output name=file-path::{output_file_path}")
-
-
-          shell: python
+          
+          input_file_path = "truffleHog.json"
+          table_headers, table_data = parse_trufflehog_output(input_file_path)
+          wrapped_table_data = wrap_text_in_table(table_data, table_headers)
+          print(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
+          nameofuser = "yash"
+          nameofjob = "trufflehog"
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+          output_file_path = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+          with open(output_file_path, "w") as file:
+              file.write(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
+          print(f'::set-output name=file-path::{output_file_path}')
+        shell: python
 
       - name: Authenticate to Google Cloud
         id: auth_truffle
