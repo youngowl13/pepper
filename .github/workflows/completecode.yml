@@ -252,7 +252,7 @@ jobs:
           # Print the table
           print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
           # Naming convention for the txt file
-          nameofrepo = "cairo"  # Replace this with your username
+          nameofuser = "cairo"  # Replace this with your username
           nameofjob = "bandit"  # Replace this with the job name or any relevant identifier
           # Get the current date and time
           now = datetime.datetime.now()
