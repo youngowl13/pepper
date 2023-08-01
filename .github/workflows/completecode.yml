@@ -94,6 +94,7 @@ jobs:
           
   Trufflehog:
     name: Trufflehog Scan
+    needs: secret_scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -164,11 +165,23 @@ jobs:
         with:
           path: ${{ steps.parse_trufflehog.outputs.file-path }}
           destination: 'cicdpipelinee/Trufflehog result'
+      
+      - name: Check for Secrets and Exit
+        run: |
+          table_file="${{ steps.parse_trufflehog.outputs.file-path }}"
+          table_length=$(wc -l < "$table_file")
+          if [ "$table_length" -gt 1 ]; then
+            echo "Secrets found in the table. Exiting workflow..."
+            exit 1
+          else
+            echo "No secrets found. Continuing with the workflow."
+          fi
+
                       
 # Bandit for Source Code Review
   Bandit:
     name: Bandit Scan
-    #needs: Trufflehog
+    needs: Trufflehog
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
