@@ -133,11 +133,11 @@ jobs:
               return table_headers, table
           
           def wrap_text_in_table(table_data, table_headers, width=20):
-              wrapped_table = [table_headers]
-              for row in table_data:
-                  wrapped_row = [textwrap.fill(str(item), width) if header != "Commit Hash" else str(item) for header, item in zip(table_headers, row)]
-                  wrapped_table.append(wrapped_row)
-              return wrapped_table
+                wrapped_table = []  # Initialize an empty table
+                for row in table_data:
+                    wrapped_row = [textwrap.fill(str(item), width) if header != "Commit Hash" else str(item) for header, item in zip(table_headers, row)]
+                    wrapped_table.append(wrapped_row)
+                return wrapped_table
           
           input_file_path = "truffleHog.json"
           table_headers, table_data = parse_trufflehog_output(input_file_path)
