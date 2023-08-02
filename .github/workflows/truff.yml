@@ -15,6 +15,7 @@ jobs:
 
     - name: Install X server
       run: |
+        sudo apt-get update
         sudo apt-get install xorg-server
 
     - name: Run X server
