@@ -13,8 +13,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
- 
-
     - name: Run truffleHog
       run: |
         python3 -m venv env
@@ -23,7 +21,6 @@ jobs:
         python env/bin/trufflehog https://github.com/youngowl13/pepper.git || true
         ls 
         pwd
-        
         
     - name: Run detect-secrets
       run: |
