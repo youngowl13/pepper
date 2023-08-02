@@ -18,7 +18,7 @@ jobs:
 
       - name: Run TruffleHog against the repository
         run: |
-              trufflehog --regex --entropy=False --json . > trufflehog_results.json
+              trufflehog --json /home/runner/work/pepper/pepper > trufflehog_output.json
               ls
               pwd
 
