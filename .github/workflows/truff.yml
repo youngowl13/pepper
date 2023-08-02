@@ -16,7 +16,8 @@ jobs:
     - name: Install X server
       run: |
         sudo apt-get update
-        sudo apt-get install xorg-server
+        sudo apt-get install xorg openbox
+
 
     - name: Run X server
       run: |
