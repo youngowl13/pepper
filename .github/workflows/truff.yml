@@ -13,6 +13,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Install X server
+      run: |
+        sudo apt-get install xorg-server
+
+    - name: Run X server
+      run: |
+        systemctl start xorg.service
+
     - name: Run truffleHog
       run: |
         python3 -m venv env
