@@ -1,9 +1,9 @@
-name: Security Scan
+name: Secret Scanning
 
 on: [push]
 
 jobs:
-  security_scan:
+  secret_scan:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,37 +17,10 @@ jobs:
         run: pip3 install trufflehog
 
       - name: Run TruffleHog against the repository
-        run: trufflehog --regex --entropy=False . > trufflehog_results.txt
+        run: trufflehog --regex --entropy=False --format=html . > trufflehog_results.html
 
-      - name: Install Node.js and npm
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Dependency Vulnerability Scan
-        run: npm audit --json > npm_audit_results.json
-
-      - name: Setup CodeQL
-        uses: github/codeql-action/init@v1
-
-      - name: Run CodeQL Analysis
-        run: |
-          codeql database create codeql-db
-          codeql analyze codeql-db
-
-      - name: Generate HTML Report
-        run: |
-          trufflehog --regex --entropy=False --format=html . > trufflehog_results.html
-          npm install -g npm-audit-html
-          npm-audit-html -i npm_audit_results.json -o npm_audit_results.html
-
-      - name: Upload HTML Reports
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v2
         with:
-          name: scan-reports
-          path: |
-            trufflehog_results.html
-            npm_audit_results.html
+          name: secret-scan-report
+          path: trufflehog_results.html
