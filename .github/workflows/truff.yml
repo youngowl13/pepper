@@ -17,8 +17,10 @@ jobs:
         run: pip3 install trufflehog
 
       - name: Run TruffleHog against the repository
-        run: trufflehog --regex --entropy=False --format=html . > trufflehog_results.html
-
+        run: |
+              trufflehog git https://github.com/youngowl13/pepper.git --regex --entropy=False --json
+              ls
+              pwd
       - name: Upload HTML Report
         uses: actions/upload-artifact@v2
         with:
