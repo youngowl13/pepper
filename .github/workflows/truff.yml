@@ -17,12 +17,13 @@ jobs:
         run: pip3 install trufflehog
 
       - name: Run TruffleHog against the repository
-        run: |
-              trufflehog --regex --entropy=False --json
-              ls
-              pwd
-      - name: Upload HTML Report
+        run: trufflehog --regex --entropy=False --json .
+
+      - name: Save TruffleHog output to a file
+        run: mv trufflehog_results.json $GITHUB_WORKSPACE/trufflehog_results.json
+
+      - name: Upload JSON Report
         uses: actions/upload-artifact@v2
         with:
           name: secret-scan-report
-          path: trufflehog_results.html
+          path: trufflehog_results.json
