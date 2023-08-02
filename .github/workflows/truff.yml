@@ -35,16 +35,37 @@ jobs:
  
 
 
-    - name: Upload truffleHog results
+    - name: Parse truffleHog results
+      run: |
+        import json
+        import csv
+
+        with open('truffleHog.json', 'r') as f:
+            data = json.load(f)
+
+        # Create a CSV writer object
+        with open('csv_file.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+
+            # Write the header row
+            writer.writerow(['Secret Type', 'File', 'Hashed Secret', 'Line Number'])
+
+            # Write the data rows
+            for secret in data['results']:
+                for key, value in secret.items():
+                    if key == 'type':
+                        secret_type = value
+                    elif key == 'filename':
+                        filename = value
+                    elif key == 'hashed_secret':
+                        hashed_secret = value
+                    elif key == 'line_number':
+                        line_number = value
+
+                writer.writerow([secret_type, filename, hashed_secret, line_number])
+
+    - name: Upload csv as artifact
       uses: actions/upload-artifact@v2
       with:
-        name: truffleHog-results
-        path: truffleHog.json
-
-    - name: Upload detect-secrets results
-      uses: actions/upload-artifact@v2
-      with:
-        name: detect-secrets-results
-        path: detect-secrets.json
-
-   
+        name: csv-file
+        path: csv_file.csv
