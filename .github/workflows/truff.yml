@@ -17,13 +17,10 @@ jobs:
         run: pip3 install trufflehog
 
       - name: Run TruffleHog against the repository
-        run: |
-              trufflehog --json /home/runner/work/pepper/pepper > trufflehog_output.json
-              ls
-              pwd
+        run: trufflehog --json . > trufflehog_output.json
 
       - name: Upload JSON Report
         uses: actions/upload-artifact@v2
         with:
           name: secret-scan-report
-          path: trufflehog_results.json
+          path: trufflehog_output.json
