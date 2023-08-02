@@ -18,7 +18,7 @@ jobs:
 
       - name: Run TruffleHog against the repository
         run: |
-              trufflehog git https://github.com/youngowl13/pepper.git --regex --entropy=False --json
+              trufflehog --regex --entropy=False --json
               ls
               pwd
       - name: Upload HTML Report
