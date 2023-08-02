@@ -1,26 +1,46 @@
 name: Secret Scanning
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
 
 jobs:
-  secret_scan:
+  scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Install Python and pip
-        run: sudo apt-get update && sudo apt-get install -y python3 python3-pip
+    - name: Run truffleHog
+      run: |
+        python3 -m venv env
+        source env/bin/activate
+        python -m pip install truffleHog
+        python env/bin/trufflehog --json https://github.com/youngowl13/pepper.git > truffleHog.json || true
+        
+        
+    - name: Run detect-secrets
+      run: |
+        python3 -m venv env-ds
+        source env-ds/bin/activate
+        pip install detect-secrets
+        detect-secrets scan > detect-secrets.json
+      
+ 
 
-      - name: Install TruffleHog from source
-        run: pip3 install trufflehog
 
-      - name: Run TruffleHog against the repository
-        run: trufflehog --json . > trufflehog_output.json
+    - name: Upload truffleHog results
+      uses: actions/upload-artifact@v2
+      with:
+        name: truffleHog-results
+        path: truffleHog.json
 
-      - name: Upload JSON Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: secret-scan-report
-          path: trufflehog_output.json
+    - name: Upload detect-secrets results
+      uses: actions/upload-artifact@v2
+      with:
+        name: detect-secrets-results
+        path: detect-secrets.json
+
+   
