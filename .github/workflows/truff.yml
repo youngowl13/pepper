@@ -17,7 +17,10 @@ jobs:
         run: pip3 install trufflehog
 
       - name: Run TruffleHog against the repository
-        run: trufflehog --regex --entropy=False --json . > trufflehog_results.json
+        run: |
+              trufflehog --regex --entropy=False --json . > trufflehog_results.json
+              ls
+              pwd
 
       - name: Upload JSON Report
         uses: actions/upload-artifact@v2
