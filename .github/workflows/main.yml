@@ -1,34 +1,135 @@
-name: Secret Scanning
-
+name: latest
 on:
   push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  scan:
+  secret_scan:
+    name: Secret Scan
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Run truffleHog
-      run: |
-        python3 -m venv env
-        source env/bin/activate
-        python -m pip install truffleHog
-        python env/bin/trufflehog https://github.com/youngowl13/pepper.git || true
-        ls 
-        pwd
-        
-    - name: Run detect-secrets
-      run: |
-        python3 -m venv env-ds
-        source env-ds/bin/activate
-        pip install detect-secrets
-        detect-secrets scan > detect-secrets.json
-        ls
-        pwd
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y diffutils jq python3 python3-pip
+          python -m pip install detect-secrets
+          python3 -m pip install tabulate
+          python -m pip install --upgrade pip
+          
+      - name: Run Detect Secrets Scan
+        run: |
+          detect-secrets scan --exclude-files '\.git/.*' --exclude-files '\.gitmodules' >> detect_secrets_output.txt
       
- 
+
+      - name: Parse Detect Secrets Output
+        id: parse_output
+        run: |
+          import json
+          import os  # Import the os module
+          import sys
+          import datetime 
+          from tabulate import tabulate
+          with open("detect_secrets_output.txt", "r") as file:
+              data = file.read()
+          data_json = json.loads(data)
+          if not data_json:
+              sys.exit(0)
+              
+          table = []  # Initialize an empty table
+          table_headers = ["Secret Type", "File", "Hashed Secret", "Line Number"]
+          for file, secrets in data_json["results"].items():
+              for secret in secrets:
+                  if not isinstance(secret, dict):
+                    continue
+                  secret_type = secret.get("type", "NA")
+                  filename = secret.get("filename", "NA")
+                  hashed_secret = secret.get("hashed_secret", "NA")
+                  line_number = secret.get("line_number", "NA")
+                  row = [secret_type, filename, hashed_secret, line_number]
+                  table.append(row)
+                     
+          print(tabulate(table, headers=table_headers, tablefmt='grid'))
+          # Naming convention for the txt file
+          nameofuser = "cairo"  # Replace this with your username
+          nameofjob = "detect_secret"   # Replace this with the job name or any relevant identifier
+          # Get the current date and time
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+          filename = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+          file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+          with open(file_path, "w") as file:
+              file.write(tabulate(table, headers=table_headers, tablefmt='grid'))
+          print(f'::set-output name=file-path::{file_path}')
+        shell: python
+        
+          
+  Trufflehog:
+    name: Trufflehog Scan
+    #needs: secret_scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run truffleHog
+        run: |
+          python3 -m venv env
+          source env/bin/activate
+          python -m pip install truffleHog
+          trufflehog --regex --entropy=False  --json https://github.com/yashwarrhan/pepper.git > truffleHog.json || true
+      
+      - name: Install tabulate
+        run: |
+          python3 -m pip install tabulate
+      
+      - name: Parse trufflehog JSON results
+        id: parse_trufflehog
+        run: |
+          import json
+          import os
+          import datetime
+          import textwrap
+          from tabulate import tabulate
+          
+          def parse_trufflehog_output(file_path):
+              table = []
+              table_headers = ["Branch", "Commit", "Commit Hash", "Date", "Reason"]
+              with open(file_path, "r") as file:
+                  for line in file:
+                      try:
+                          data = json.loads(line)
+                          row = [data["branch"], data["commit"], data["commitHash"], data["date"], data["reason"]]
+                          table.append(row)
+                      except json.JSONDecodeError as e:
+                          print(f"Failed to parse line as JSON: {line}")
+              return table_headers, table
+          
+          def wrap_text_in_table(table_data, table_headers, width=20):
+                wrapped_table = []  # Initialize an empty table
+                for row in table_data:
+                    wrapped_row = [textwrap.fill(str(item), width) if header != "Commit Hash" else str(item) for header, item in zip(table_headers, row)]
+                    wrapped_table.append(wrapped_row)
+                return wrapped_table
+          
+          input_file_path = "truffleHog.json"
+          table_headers, table_data = parse_trufflehog_output(input_file_path)
+          wrapped_table_data = wrap_text_in_table(table_data, table_headers)
+          print(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
+          nameofuser = "yash"
+          nameofjob = "trufflehog"
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+          output_file_path = f"{nameofuser}_{nameofjob}_{date_and_time}.txt"
+          with open(output_file_path, "w") as file:
+              file.write(tabulate(wrapped_table_data, headers=table_headers, tablefmt='grid'))
+          print(f'::set-output name=file-path::{output_file_path}')
+        shell: python
+
+      
