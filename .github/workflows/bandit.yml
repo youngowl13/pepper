@@ -72,17 +72,6 @@ jobs:
           
           # Print the table
           print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-          # Naming convention for the txt file
-          nameofuser = "cairo"  # Replace this with your username
-          nameofjob = "bandit"  # Replace this with the job name or any relevant identifier
-          # Get the current date and time
-          now = datetime.datetime.now()
-          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
-          filename = f"{nameofuser}{nameofjob}{date_and_time}.txt"
-          # Save the table to a local file
-          file_path = os.path.join(os.path.dirname(os.path.abspath(_file_)), filename)
-          with open(file_path, "w") as file:
-              file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-          print(f'::set-output name=file-path::{file_path}')
+          
         shell: python
         
