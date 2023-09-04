@@ -1,0 +1,90 @@
+name: Bandit Scan
+
+on: [push, pull_request]  # This is just an example. Adjust the triggers as needed.
+
+jobs:
+  bandit_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit==1.7.0  # Pinning version for example
+          pip install tabulate==0.8.9  # Pinning version for example
+
+      - name: Security check - Bandit
+        run: |
+          bandit -r . -x venv  # Excluding the 'venv' directory as an example
+          > bandit_report.txt || true
+
+      - name: Parse Bandit report
+        id: parse_output
+        run: |
+          import os
+          import json
+          import datetime
+          import textwrap
+          from tabulate import tabulate
+
+          file_path = 'bandit_report.txt'
+          table_rows = []
+
+          with open(file_path, 'r') as file:
+              issue, severity, cwe, location = "", "", "", ""
+              collecting_info = False
+              for line in file:
+                  if 'Issue' in line:
+                      issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
+                  elif 'Severity' in line:
+                      severity = line.split(': ')[1].strip().split(' ')[0]
+                  elif 'CWE' in line:
+                      cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)
+                  elif 'Location' in line:
+                      location = textwrap.fill(line.split(': ')[1].strip(), width=30)
+                      collecting_info = True
+                  elif '---------------------------' in line:
+                      collecting_info = False
+                      table_rows.append([issue, severity, cwe, location])
+                      issue, severity, cwe, location = "", "", "", ""
+                  elif collecting_info:
+                      location += "\n" + textwrap.fill(line.strip(), width=50)
+
+          severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
+          sorted_rows = sorted(table_rows, key=lambda x: severity_order[x[1]])
+          table_headers = ["Issue", "Severity", "CWE", "Location"]
+
+          print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
+
+          nameofuser = "cairo"
+          nameofjob = "bandit"
+          now = datetime.datetime.now()
+          date_and_time = now.strftime("%Y-%m-%d_%H-%M")
+          filename = f"{nameofuser}{nameofjob}{date_and_time}.txt"
+
+          with open(filename, "w") as file:
+              file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
+
+          print(f'::set-output name=file-path::{filename}')
+        shell: python
+
+      - name: Check for High Severity Issues and Exit
+        run: |
+          table_file="${{ steps.parse_output.outputs.file-path }}"
+          high_severity_found=$(grep -E 'High\s+' "$table_file")
+          if [ -n "$high_severity_found" ]; then
+            echo "High severity issues found. Exiting workflow..."
+            exit 1
+          else
+            echo "No high severity issues found. Continuing with the workflow."
+          fi
+
+      # Add more steps if needed.
