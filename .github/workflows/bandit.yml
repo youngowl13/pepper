@@ -1,11 +1,9 @@
 name: Bandit Scan
 
-on: [push, pull_request]  # This is just an example. Adjust the triggers as needed.
-
+on: [push, pull_request]  
 jobs:
   Bandit:
     name: Bandit Scan
-    #needs: secret_scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,9 +18,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install bandit
           pip install tabulate
+
       - name: Security check - Bandit
         run: |
           bandit -r . > bandit_report.txt || true
+
       - name: Parse Bandit report
         id: parse_output
         run: |
@@ -33,11 +33,10 @@ jobs:
           import os
           import datetime
           from tabulate import tabulate
-          # Specify the file path
+
           file_path = 'bandit_report.txt'
-          # To store the table rows
           table_rows = []
-          # Open and read the file
+
           with open(file_path, 'r') as file:
               issue, severity, cwe, location = "", "", "", ""
               collecting_info = False
@@ -45,44 +44,39 @@ jobs:
                   if 'Issue' in line:
                       issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
                   elif 'Severity' in line:
-                      severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
+                      severity = line.split(': ')[1].strip().split(' ')[0]
                   elif 'CWE' in line:
-                      cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
+                      cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)
                   elif 'Location' in line:
                       location = textwrap.fill(line.split(': ')[1].strip(), width=30)
-                      collecting_info = True  # Start collecting info after 'Location'
+                      collecting_info = True
                   elif '---------------------------' in line:
-                      collecting_info = False  # Stop collecting info when encountering the delimiter
-                      # Assuming this is the end of the current issue, so we add the row to the list of rows and reset the variables for the next issue.
+                      collecting_info = False
                       table_rows.append([issue, severity, cwe, location])
                       issue, severity, cwe, location = "", "", "", ""
                   elif collecting_info:
-                      # Append all additional lines of information to the "Location" for the current issue
                       location += "\n" + textwrap.fill(line.strip(), width=50)
-          # Convert to JSON
+
           json_data = json.dumps(table_rows)
-          # Parse JSON
           parsed_json = json.loads(json_data)
-          # Custom sort function
+
           severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
-          # Sort the rows
           sorted_rows = sorted(parsed_json, key=lambda x: severity_order[x[1]])
-          # Specify the table headers
           table_headers = ["Issue", "Severity", "CWE", "Location"]
-          
-          # Print the table
+
           print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-          
+
+          high_severity_count = sum(1 for row in sorted_rows if row[1] == 'High')
+          print(f"::set-output name=high_severity_count::{high_severity_count}")
+
         shell: python
 
       - name: Check for High Severity Issues and Exit
         run: |
-          table_file="${{ steps.parse_output.outputs.file-path }}"
-          high_severity_found=$(grep -E 'High\s+' "$table_file")
-          if [ -n "$high_severity_found" ]; then
-            echo "High severity issues found. Exiting workflow..."
+          high_severity_count=${{ steps.parse_output.outputs.high_severity_count }}
+          if [ "$high_severity_count" -gt 0 ]; then
+            echo "High severity issues found: $high_severity_count. Exiting workflow..."
             exit 1
-          else
+          else:
             echo "No high severity issues found. Continuing with the workflow."
           fi
-        
