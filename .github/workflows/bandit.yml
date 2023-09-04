@@ -3,14 +3,14 @@ name: Bandit Scan
 on: [push, pull_request]  # This is just an example. Adjust the triggers as needed.
 
 jobs:
-  bandit_scan:
+  Bandit:
+    name: Bandit Scan
+    #needs: secret_scan
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
@@ -18,26 +18,26 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install bandit==1.7.0  # Pinning version for example
-          pip install tabulate==0.8.9  # Pinning version for example
-
+          pip install bandit
+          pip install tabulate
       - name: Security check - Bandit
         run: |
-          bandit -r . -x venv  # Excluding the 'venv' directory as an example
-          > bandit_report.txt || true
-
+          bandit -r . > bandit_report.txt || true
       - name: Parse Bandit report
         id: parse_output
         run: |
-          import os
-          import json
-          import datetime
+          import re
           import textwrap
+          import json
+          import sys
+          import os
+          import datetime
           from tabulate import tabulate
-
+          # Specify the file path
           file_path = 'bandit_report.txt'
+          # To store the table rows
           table_rows = []
-
+          # Open and read the file
           with open(file_path, 'r') as file:
               issue, severity, cwe, location = "", "", "", ""
               collecting_info = False
@@ -45,46 +45,44 @@ jobs:
                   if 'Issue' in line:
                       issue = textwrap.fill(line.split(': ')[1].strip(), width=40)
                   elif 'Severity' in line:
-                      severity = line.split(': ')[1].strip().split(' ')[0]
+                      severity = line.split(': ')[1].strip().split(' ')[0]  # Take only severity, exclude 'Confidence'
                   elif 'CWE' in line:
-                      cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)
+                      cwe = textwrap.fill(line.split(': ')[1].strip(), width=70)  # Capture everything after "CWE:"
                   elif 'Location' in line:
                       location = textwrap.fill(line.split(': ')[1].strip(), width=30)
-                      collecting_info = True
+                      collecting_info = True  # Start collecting info after 'Location'
                   elif '---------------------------' in line:
-                      collecting_info = False
+                      collecting_info = False  # Stop collecting info when encountering the delimiter
+                      # Assuming this is the end of the current issue, so we add the row to the list of rows and reset the variables for the next issue.
                       table_rows.append([issue, severity, cwe, location])
                       issue, severity, cwe, location = "", "", "", ""
                   elif collecting_info:
+                      # Append all additional lines of information to the "Location" for the current issue
                       location += "\n" + textwrap.fill(line.strip(), width=50)
-
+          # Convert to JSON
+          json_data = json.dumps(table_rows)
+          # Parse JSON
+          parsed_json = json.loads(json_data)
+          # Custom sort function
           severity_order = {'High': 0, 'Medium': 1, 'Low': 2}
-          sorted_rows = sorted(table_rows, key=lambda x: severity_order[x[1]])
+          # Sort the rows
+          sorted_rows = sorted(parsed_json, key=lambda x: severity_order[x[1]])
+          # Specify the table headers
           table_headers = ["Issue", "Severity", "CWE", "Location"]
-
+          
+          # Print the table
           print(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-
-          nameofuser = "cairo"
-          nameofjob = "bandit"
+          # Naming convention for the txt file
+          nameofuser = "cairo"  # Replace this with your username
+          nameofjob = "bandit"  # Replace this with the job name or any relevant identifier
+          # Get the current date and time
           now = datetime.datetime.now()
           date_and_time = now.strftime("%Y-%m-%d_%H-%M")
           filename = f"{nameofuser}{nameofjob}{date_and_time}.txt"
-
-          with open(filename, "w") as file:
+          # Save the table to a local file
+          file_path = os.path.join(os.path.dirname(os.path.abspath(_file_)), filename)
+          with open(file_path, "w") as file:
               file.write(tabulate(sorted_rows, headers=table_headers, tablefmt='grid'))
-
-          print(f'::set-output name=file-path::{filename}')
+          print(f'::set-output name=file-path::{file_path}')
         shell: python
-
-      #name: Check for High Severity Issues and Exit
-        #run: |
-         # table_file="${{ steps.parse_output.outputs.file-path }}"
-         # high_severity_found=$(grep -E 'High\s+' "$table_file")
-         # if [ -n "$high_severity_found" ]; then
-          #  echo "High severity issues found. Exiting workflow..."
-            #exit 1
-       #   else
-          #  echo "No high severity issues found. Continuing with the workflow."
-        #  fi
-
-      # Add more steps if needed.
+        
