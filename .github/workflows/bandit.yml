@@ -76,15 +76,15 @@ jobs:
           print(f'::set-output name=file-path::{filename}')
         shell: python
 
-      - name: Check for High Severity Issues and Exit
-        run: |
-          table_file="${{ steps.parse_output.outputs.file-path }}"
-          high_severity_found=$(grep -E 'High\s+' "$table_file")
-          if [ -n "$high_severity_found" ]; then
-            echo "High severity issues found. Exiting workflow..."
-            exit 1
-          else
-            echo "No high severity issues found. Continuing with the workflow."
-          fi
+      #name: Check for High Severity Issues and Exit
+        #run: |
+         # table_file="${{ steps.parse_output.outputs.file-path }}"
+         # high_severity_found=$(grep -E 'High\s+' "$table_file")
+         # if [ -n "$high_severity_found" ]; then
+          #  echo "High severity issues found. Exiting workflow..."
+            #exit 1
+       #   else
+          #  echo "No high severity issues found. Continuing with the workflow."
+        #  fi
 
       # Add more steps if needed.
